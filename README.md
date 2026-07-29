@@ -25,7 +25,15 @@ All data ligger i én blokk øverst i `<script>`, merket `/* === DATA === */`.
 | `SECTORS` | 90 sektorer med koordinater, andel brent og avstand til brannflate |
 | `BURN_RINGS` | Brannflaten, 76 polygoner |
 | `FORESTS` | De tre stengte statsskogene |
+| `PLACES` | Stedsnavnene i kartlaget «Steder», avslått som standard |
+| `BOOLDER` | Sektornavn → Boolder-slug, brukt til lenka i infoboksen |
 | `SOURCES` | Kildelista nederst på siden |
+
+Boolder-slugene følger ingen fast regel — `Rocher d'Avon` blir `rocher-avon`,
+`Buthiers Piscine` blir `buthiers`, `Cuvier Petit Rempart` blir `petit-rempart`.
+De er sjekket mot boolder.com én for én. Hvis Boolder gir en sektor nytt navn,
+må slugen kontrolleres manuelt; adressen blir
+`https://www.boolder.com/en/fontainebleau/<slug>`.
 
 Når ONF gjenåpner en sektor, endres feltet `s` for den sektoren til `open`.
 
@@ -39,6 +47,7 @@ Bare disse feltene er ferskvare:
 | `META.updated` | Datoen i toppstripa |
 | `META.n_open` | Tallet i faktakortet «Åpne sektorer» |
 | `META.access_date` | Datoen samme kort viser |
+| `META.ban_until` | Datoen ferdselsforbudet gjelder til, vist i samme kort |
 | `SECTORS[].s` | Statusen på hver sektor — sett `open` ved gjenåpning |
 
 Overskrift, ingress, forholdsbånd og de tre første faktakortene handler om
@@ -53,6 +62,13 @@ brannens utstrekning. De står seg uansett hva som åpner igjen.
 | Sektorer | [Boolder](https://github.com/boolder-org/boolder-data) | CC BY 4.0 |
 | Åpen/stengt | [CrashPad Tours](https://crashpadtours.fr/fontainebleau-incendie-secteurs-ouverts/) | — |
 | Bakgrunnskart | OpenStreetMap, CARTO, Esri | Se attribusjon i kartet |
+
+## Lisens
+
+Koden i `index.html` er MIT-lisensiert, se [LICENSE](LICENSE). Dataene siden
+bygger på har sine egne vilkår — Boolders sektordata er CC BY 4.0, brannflaten
+er © European Union / Copernicus EMS. Vilkårene står i lisensfilen og i
+kildetabellen over.
 
 ## Metode
 
