@@ -46,6 +46,8 @@ const SPRAAK = {
     panel: '153 av 475', gammelt: '56,3', pct: '32,2 %',
     metode: 'Hva tallene bygger på', knapp: 'EN',
     tom: 'Ingen sektorer passer søket.', logg: 'Målet lagt om: faktiske blokker',
+    alleKnapp: 'Åpne alle områder', alleLukk: 'Lukk alle områder',
+    klSum: '1 877 av 5 935 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
   },
   en: {
     h1: 'What the fire actually took.', nav: 'MAP',
@@ -53,8 +55,21 @@ const SPRAAK = {
     panel: '153 of 475', gammelt: '56.3', pct: '32.2%',
     metode: 'What the figures rest on', knapp: 'NO',
     tom: 'No sectors match that search.', logg: 'The measure changes: actual boulders',
+    alleKnapp: 'Expand all areas', alleLukk: 'Collapse all areas',
+    klSum: '1,877 of 5,935 boulders', klTally: 'All 90 sectors across 19 areas.',
   },
 };
+
+/* Åpne alle / lukk alle, med knappeteksten som skifter. */
+async function t2sjekk(page, F) {
+  const b = page.locator('#alle');
+  if ((await b.innerText()) !== F.alleKnapp) throw new Error('feil knappetekst: ' + await b.innerText());
+  await b.click(); await page.waitForTimeout(350);
+  if ((await page.locator('.row:visible').count()) !== 90) throw new Error('åpne alle ga ikke 90 rader');
+  if ((await b.innerText()) !== F.alleLukk) throw new Error('knappen skiftet ikke til lukk');
+  await b.click(); await page.waitForTimeout(350);
+  if ((await page.locator('.row:visible').count()) !== 0) throw new Error('lukk alle skjulte ikke radene');
+}
 
 for (const [lang, F] of Object.entries(SPRAAK)) {
   console.log(`\n══ ${lang} ══`);
@@ -86,6 +101,40 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     (await page.locator('.tl time[datetime]').count()) === 7);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
+
+  console.log('— sammenslåtte områder —');
+  await t('19 områder', async () => (await page.locator('.clus').count()) === 19 ? '19' : false);
+  await t('ingen rader synlige ved start', async () =>
+    (await page.locator('.row:visible').count()) === 0);
+  await t('tellelinja teller områder', async () =>
+    nbsp(await page.locator('#tally').innerText()) === F.klTally);
+  await t('mest brent område øverst', async () =>
+    (await page.locator('.clus .g').first().innerText()).startsWith('MONT AIGU'));
+  await t('sammendraget viser blokktallet', async () =>
+    nbsp(await page.locator('.clus', { hasText: 'TROIS PIGNONS' }).first().innerText()).includes(F.klSum));
+  await t('klikk på overskrifta åpner området', async () => {
+    const tp = page.locator('.clus', { hasText: 'TROIS PIGNONS' }).first();
+    await tp.click(); await page.waitForTimeout(250);
+    const n = await page.locator('.row:visible').count();
+    const a = await tp.getAttribute('aria-expanded');
+    await tp.click(); await page.waitForTimeout(250);
+    return n === 28 && a === 'true' && (await page.locator('.row:visible').count()) === 0 ? '28' : false;
+  });
+  await t('åpne og lukk alle', async () => {
+    await t2sjekk(page, F);
+    return true;
+  });
+  await t('valg fra søk holder området åpent etterpå', async () => {
+    await page.fill('#q', 'diplodocus'); await page.waitForTimeout(250);
+    await page.locator('.row').first().click(); await page.waitForTimeout(800);
+    await page.fill('#q', ''); await page.waitForTimeout(350);
+    return (await page.locator('.row[aria-current="true"]:visible').count()) === 1 &&
+           (await page.locator('.row:visible').count()) === 28;
+  });
+  await t('områdeoverskriftene er knapper med aria-controls', async () =>
+    await page.evaluate(() => [...document.querySelectorAll('.clus')].every(
+      c => c.tagName === 'BUTTON' && c.hasAttribute('aria-expanded') &&
+           document.getElementById(c.getAttribute('aria-controls')))));
 
   console.log('— sektorvalg og blokker —');
   await t('velg J.A. Martin', async () => {

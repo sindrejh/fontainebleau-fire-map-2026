@@ -144,9 +144,38 @@ select{font:400 13px/1 var(--mono);padding:6px 8px;border:1px solid var(--gres2)
 .sec-note{font:400 13px/1.5 var(--body);color:var(--ash);margin:10px 0 16px}
 
 /* tabell */
-.clus{font:500 11px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--ash);
-  margin:26px 0 0;padding:12px 0 8px;border-bottom:1px solid var(--soot3);display:flex;justify-content:space-between}
-.clus em{font-style:normal;color:var(--ash2)}
+/* ---------- klyngene, sammenslåtte ---------- */
+.clus{display:grid;grid-template-columns:13px minmax(0,1fr) auto;gap:12px;align-items:baseline;width:100%;
+  text-align:left;background:none;border:0;border-bottom:1px solid var(--soot3);cursor:pointer;
+  margin:22px 0 0;padding:13px 4px 11px;color:var(--ash);transition:background 120ms,color 120ms}
+.clus:hover,.clus:focus-visible{background:var(--soot2);color:var(--craie);outline:none}
+.clus:focus-visible{outline:2px solid var(--braise);outline-offset:-2px}
+.clus .chev{align-self:center;width:13px;height:13px;position:relative}
+.clus .chev::before{content:"";position:absolute;left:2px;top:3.5px;width:6px;height:6px;
+  border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;
+  transform:rotate(-45deg);transition:transform 160ms}
+.clus[aria-expanded="true"] .chev::before{transform:rotate(45deg)}
+.clus .g{font:500 11.5px/1.3 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--craie)}
+.clus .n{display:block;font:400 12.5px/1.45 var(--body);letter-spacing:0;text-transform:none;
+  color:var(--ash2);margin-top:4px}
+.clus .sum{text-align:right;font:400 12.5px/1.45 var(--body);color:var(--ash);white-space:nowrap}
+.clus .sum b{display:block;font:500 13px/1.2 var(--mono);color:var(--craie);letter-spacing:-.01em;margin-bottom:4px}
+.clus .sum .cbar{display:block;width:88px;height:4px;background:#2C261E;margin:6px 0 0 auto}
+.clus .sum .cbar i{display:block;height:100%;background:var(--braise)}
+@media(max-width:560px){
+  .clus{grid-template-columns:13px minmax(0,1fr);gap:9px}
+  .clus .sum{grid-column:2;text-align:left;white-space:normal;margin-top:7px}
+  .clus .sum .cbar{margin-left:0}
+}
+.grp[hidden]{display:none}
+
+.tallyrow{display:flex;gap:14px;align-items:baseline;flex-wrap:wrap;margin:8px 0 0}
+.tallyrow .tally{margin:0}
+.alle{margin-left:auto;background:none;border:0;padding:2px 0;cursor:pointer;
+  font:400 12.5px/1.5 var(--body);color:var(--ash);border-bottom:1px solid var(--soot3)}
+.alle:hover{color:var(--craie);border-color:var(--ash2)}
+.alle:focus-visible{outline:2px solid var(--braise);outline-offset:2px}
+.alle[hidden]{display:none}
 .row{display:grid;grid-template-columns:11px minmax(0,1fr) 86px 58px 74px;gap:13px;align-items:center;width:100%;
   text-align:left;background:none;border:0;border-bottom:1px solid #241F19;padding:11px 4px;cursor:pointer;
   font:inherit;color:var(--craie);transition:background 120ms}
@@ -172,7 +201,7 @@ select{font:400 13px/1 var(--mono);padding:6px 8px;border:1px solid var(--gres2)
 /* Etiketten skal aldri bli stående igjen på linja over nedtrekkslista. */
 .sortwrap{display:flex;align-items:center;gap:9px;flex:0 0 auto}
 .tools select{background:var(--soot2);color:var(--craie);border-color:var(--soot3)}
-.tally{font:400 12.5px/1.5 var(--body);color:var(--ash);margin:8px 0 0;min-height:19px}
+.tally{font:400 12.5px/1.5 var(--body);color:var(--ash);min-height:19px}
 .nohit{font:400 14px/1.5 var(--body);color:var(--ash);padding:22px 4px}
 
 /* ---------- endringslogg ---------- */
@@ -308,7 +337,10 @@ footer a{color:var(--ash);text-decoration:underline;text-underline-offset:2px}
           </select>
         </span>
       </div>
-      <p class="tally" id="tally" role="status"></p>
+      <div class="tallyrow">
+        <p class="tally" id="tally" role="status"></p>
+        <button class="alle" id="alle" type="button"></button>
+      </div>
       <div id="rows"></div>
     </div>
     <aside>
@@ -432,8 +464,16 @@ function tekster(){
   sok:'Søk etter sektor eller klynge', sorter:'Sorter',
   sortopt:['Mest brent','Navn','Nærmest brannen','Flest blokker'],
   tally:(v,t)=>v<t?'Viser '+v+' av '+t+' sektorer.':'Viser alle '+t+' sektorene.',
+  tallyGrp:(v,t,g)=>(v<t?v+' av '+t+' sektorer':'Alle '+t+' sektorene')+
+   ' fordelt på '+g+(g===1?' område':' områder')+'.',
   ingen:'Ingen sektorer passer søket.',
-  inntil:p=>' · inntil '+pc(p)+' av blokkene',
+  /* Klyngeoverskriftene er sammendraget man ser når områdene er slått sammen,
+     så de må bære nok til at man skjønner om det er verdt å åpne dem. */
+  klSekt:n2=>n2===1?'1 sektor':n2+' sektorer',
+  klBrent:(b,t2,p)=>'<b>'+n(b)+' av '+n(t2)+' blokker</b>'+pc(p)+' av blokkene i brannflaten',
+  klRen:(t2,km)=>'<b>Ingen av '+n(t2)+' blokker</b>nærmeste brannflate '+k(km)+' km unna',
+  klAapne:'Åpne alle områder', klLukk:'Lukk alle områder',
+  klVis:g=>'Vis sektorene i '+g,
   shapes:[['Brannflate','Offisiell avgrensning fra Copernicus EMS, satellittbilde med 2 meters oppløsning tatt 19. juli.'],
           ['Stengt statsskog','De tre skogene ferdselsforbudet gjelder for. Faktiske eiendomsgrenser fra ONFs åpne data.'],
           ['Sektorer','Navn og posisjon fra Boolder. Fargen viser hvor stor andel av blokkene som ligger i brannflaten.'],
@@ -503,8 +543,14 @@ function tekster(){
   sok:'Search for a sector or cluster', sorter:'Sort',
   sortopt:['Most burned','Name','Closest to the fire','Most boulders'],
   tally:(v,t)=>v<t?'Showing '+v+' of '+t+' sectors.':'Showing all '+t+' sectors.',
+  tallyGrp:(v,t,g)=>(v<t?v+' of '+t+' sectors':'All '+t+' sectors')+
+   ' across '+g+(g===1?' area':' areas')+'.',
   ingen:'No sectors match that search.',
-  inntil:p=>' · up to '+pc(p)+' of the boulders',
+  klSekt:n2=>n2===1?'1 sector':n2+' sectors',
+  klBrent:(b,t2,p)=>'<b>'+n(b)+' of '+n(t2)+' boulders</b>'+pc(p)+' of the boulders inside the perimeter',
+  klRen:(t2,km)=>'<b>None of '+n(t2)+' boulders</b>nearest burn area '+k(km)+' km away',
+  klAapne:'Expand all areas', klLukk:'Collapse all areas',
+  klVis:g=>'Show the sectors in '+g,
   shapes:[['Burn perimeter','The official outline from Copernicus EMS, from a 2 m resolution satellite image taken 19 July.'],
           ['Closed state forest','The three forests the access ban covers. Actual property boundaries from ONF open data.'],
           ['Sectors','Name and position from Boolder. The colour shows what share of the boulders fall inside the perimeter.'],
@@ -779,6 +825,10 @@ if(typeof L==="undefined"){
 
  function select(i){
   const s=SECTORS[i];
+  /* Velger man en sektor i kartet, kan raden ligge i et sammenslått område.
+     Da åpnes området, ellers markeres en rad ingen ser. Dette gjelder også når
+     valget skjer fra et søk: området skal stå åpent når søket tømmes. */
+  if(!apne.has(s.g))settAapen(s.g,true);
   Object.keys(marks).forEach(j=>marks[j].setRadius(+j===i?11:(SECTORS[j].bb>0?8:6)));
   rowFor.forEach((r,j)=>r.setAttribute('aria-current',j===i?'true':'false'));
   cur=i;
@@ -806,9 +856,13 @@ if(typeof L==="undefined"){
  }
 
  /* ---- sektorlista: søk, sortering og statusfiltre ---- */
- const rows=el('rows'),tally=el('tally'),qEl=el('q'),sortEl=el('sortby');
+ const rows=el('rows'),tally=el('tally'),qEl=el('q'),sortEl=el('sortby'),alleEl=el('alle');
  const active={};Object.keys(CAT).forEach(k=>active[k]=true);
- const rowFor=new Map();
+ const rowFor=new Map(),grpFor=new Map();
+ /* Områdene starter sammenslåtte. Er ett åpnet, holder det seg åpent gjennom
+    filtrering og språkbytte. */
+ const apne=new Set();
+ let gruppert=true;
  const SORT={
   brent:(a,b)=>b.s.brent-a.s.brent||a.s.avst-b.s.avst||a.s.n.localeCompare(b.s.n,'nb'),
   navn:(a,b)=>a.s.n.localeCompare(b.s.n,'nb'),
@@ -837,34 +891,74 @@ if(typeof L==="undefined"){
 
  function render(){
   const q=norm(qEl.value.trim()),sortKey=sortEl.value;
-  rows.innerHTML='';rowFor.clear();
+  rows.innerHTML='';rowFor.clear();grpFor.clear();
   let liste=SECTORS.map((s,i)=>({s,i})).filter(o=>active[o.s.s]);
   if(q)liste=liste.filter(o=>norm(o.s.n).includes(q)||norm(o.s.g).includes(q));
 
-  if(!q&&sortKey==='brent'){
-   /* Standardvisningen beholder Boolders klynger. Så snart man søker eller
-      sorterer på noe annet, ville klyngeoverskriftene stått i veien. */
-   const grupper=[];liste.forEach(o=>{if(grupper.indexOf(o.s.g)<0)grupper.push(o.s.g);});
-   grupper.sort((a,b)=>a.localeCompare(b,'nb'));
-   grupper.forEach(g=>{
+  gruppert=!q&&sortKey==='brent';
+  if(gruppert){
+   /* Standardvisningen beholder Boolders klynger, slått sammen. 90 rader på rad
+      er mer enn noen leser; 19 områdeoverskrifter med sammendrag kan man skumme.
+      Så snart man søker eller sorterer på noe annet, ville overskriftene stått i
+      veien, og da vises lista flat. */
+   const sum={};liste.forEach(o=>{const e=sum[o.s.g]||(sum[o.s.g]={bb:0,blokk:0});
+    e.bb+=o.s.bb;e.blokk+=o.s.blokk;});
+   /* Områdene følger samme rekkefølge som lista ellers: mest brent først.
+      Alfabetisk ville Trois Pignons — det eneste området brannen traff for
+      alvor — havnet nest nederst. */
+   const grupper=Object.keys(sum).sort((a,b)=>
+    sum[b].bb/sum[b].blokk-sum[a].bb/sum[a].blokk||a.localeCompare(b,'nb'));
+   grupper.forEach((g,gi)=>{
     const del=liste.filter(o=>o.s.g===g).sort(SORT.brent);
-    const verst=Math.max(...del.map(o=>o.s.brent));
-    const h=document.createElement('div');h.className='clus';
-    h.innerHTML='<span>'+g+'</span><em>'+del.length+(verst>0?T.inntil(verst):'')+'</em>';
+    const blokk=del.reduce((a,o)=>a+o.s.blokk,0),bb=del.reduce((a,o)=>a+o.s.bb,0);
+    const km=Math.min(...del.map(o=>o.s.avst));
+    const pct=blokk?Math.round(1000*bb/blokk)/10:0;
+    const id='grp-'+gi,aapen=apne.has(g);
+
+    const h=document.createElement('button');h.className='clus';h.type='button';
+    h.setAttribute('aria-expanded',String(aapen));
+    h.setAttribute('aria-controls',id);
+    h.innerHTML='<span class="chev" aria-hidden="true"></span>'+
+      '<span class="g">'+g+'<span class="n">'+T.klSekt(del.length)+'</span></span>'+
+      '<span class="sum">'+(bb>0?T.klBrent(bb,blokk,pct)+
+        '<span class="cbar"><i style="width:'+Math.max(pct,2)+'%"></i></span>'
+        :T.klRen(blokk,km))+'</span>';
+    h.addEventListener('click',()=>settAapen(g,!apne.has(g)));
     rows.appendChild(h);
-    del.forEach(o=>rows.appendChild(lagRad(o)));});
+
+    const boks=document.createElement('div');boks.className='grp';boks.id=id;
+    boks.hidden=!aapen;
+    del.forEach(o=>boks.appendChild(lagRad(o)));
+    rows.appendChild(boks);
+    grpFor.set(g,{h,boks});});
   }else{
    liste.sort(SORT[sortKey]);
    liste.forEach(o=>rows.appendChild(lagRad(o)));
   }
 
   if(!liste.length)rows.innerHTML='<p class="nohit">'+T.ingen+'</p>';
-  tally.textContent=T.tally(liste.length,META.n_total);
+  tally.textContent=gruppert?T.tallyGrp(liste.length,META.n_total,grpFor.size)
+                            :T.tally(liste.length,META.n_total);
+  alleEl.hidden=!gruppert||!liste.length;
+  alleEl.textContent=apne.size?T.klLukk:T.klAapne;
+ }
+
+ /* Åpner eller lukker ett område. Rader i et lukket område finnes fortsatt i
+    DOM-en, så aria-current og markørkoblingen holder seg. */
+ function settAapen(g,paa){
+  if(paa)apne.add(g); else apne.delete(g);
+  const e=grpFor.get(g);
+  if(e){e.boks.hidden=!paa;e.h.setAttribute('aria-expanded',String(paa));}
+  alleEl.textContent=apne.size?T.klLukk:T.klAapne;
  }
 
  let tid=null;
  qEl.addEventListener('input',()=>{clearTimeout(tid);tid=setTimeout(render,120);});
  sortEl.addEventListener('change',render);
+ alleEl.addEventListener('click',()=>{
+  const lukk=apne.size>0;
+  Array.from(grpFor.keys()).forEach(g=>settAapen(g,!lukk));
+ });
 
  const fbox=el('filters');
  function byggChips(){
