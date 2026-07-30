@@ -84,6 +84,21 @@ Skriptet er idempotent — det gir samme resultat uansett hvor mange ganger det
 kjøres. Adgangsstatusen (`open`, `stengt_annet`) rører det ikke; den er en
 menneskelig avgjørelse, ikke noe som følger av brannflaten.
 
+## Sektorlista
+
+Områdene (Boolders klynger) står sammenslåtte. 90 rader etter hverandre er mer
+enn noen leser; 19 områdeoverskrifter kan man skumme. Overskrifta bærer
+sammendraget — antall sektorer, hvor mange av områdets blokker som ligger i
+brannflaten, og for uberørte områder avstanden til nærmeste brannflate — og et
+trykk på den åpner området.
+
+Områdene sorteres som lista ellers, mest brent først. Alfabetisk ville Trois
+Pignons, det eneste området brannen traff for alvor, havnet nest nederst.
+
+Velger man en sektor i kartet, åpner området sitt av seg selv, ellers ville
+raden vært markert uten å være synlig. Søk og alle andre sorteringer viser lista
+flat, uten områdeoverskrifter.
+
 ## Endringslogg
 
 `HISTORIKK` er tidslinja sida viser i høyre spalte, nyeste først. Hver oppføring
