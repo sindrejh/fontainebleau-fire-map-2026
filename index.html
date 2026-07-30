@@ -24,7 +24,6 @@
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
-html{scroll-behavior:smooth}
 body{background:var(--soot);color:var(--craie);font:16px/1.6 var(--body);-webkit-font-smoothing:antialiased}
 .wrap{max-width:1240px;margin:0 auto;padding:0 20px}
 a{color:inherit}
@@ -431,7 +430,9 @@ if(typeof L==="undefined"){
                  :'<b>Utenfor de tre stengte statsskogene.</b> Ferdselsforbudet for Fontainebleau gjelder ikke her.')+'</p>'+
      (s.iaoi?'':'<p class="dim">Sektoren ligger utenfor området Copernicus gjennomgikk. Den er ikke vurdert, men ligger også godt unna brannen.</p>')+
    '</div></div>';
-  picked.scrollIntoView({block:'nearest',behavior:'smooth'});
+  /* Uten animasjon: ruller siden mens fingeren er på vei ned, treffer neste trykk en
+     annen rad enn den man siktet på. */
+  picked.scrollIntoView({block:'nearest'});
  }
 
  const rows=document.getElementById('rows'),rowEls=[],order=[];
@@ -474,10 +475,16 @@ if(typeof L==="undefined"){
  const setOpen=o=>{bar.classList.toggle('open',o);btn.setAttribute('aria-expanded',String(o));};
  btn.addEventListener('click',()=>setOpen(!bar.classList.contains('open')));
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&bar.classList.contains('open')){setOpen(false);btn.focus();}});
- document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',()=>{
+ document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',e=>{
   setOpen(false);
-  const t=document.querySelector(a.getAttribute('href'));
-  if(t&&t.tagName==='DETAILS')t.open=true;
+  const href=a.getAttribute('href'),t=document.querySelector(href);
+  if(!t)return;
+  if(t.tagName==='DETAILS')t.open=true;
+  /* Myk rulling bare her, på et enkeltstående trykk — ikke som regel for hele sida,
+     der den ville flyttet radene under fingeren mellom to trykk. */
+  e.preventDefault();
+  t.scrollIntoView({behavior:'smooth',block:'start'});
+  history.replaceState(null,'',href);
  }));
 })();
 </script>
