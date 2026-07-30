@@ -48,6 +48,7 @@ const SPRAAK = {
     tom: 'Ingen sektorer passer søket.', logg: 'Målet lagt om: faktiske blokker',
     alleKnapp: 'Åpne alle områder', alleLukk: 'Lukk alle områder',
     klSum: '1 877 av 5 935 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
+    klRen: 'Ingen av 2 339 blokker brent',
   },
   en: {
     h1: 'What the fire actually took.', nav: 'MAP',
@@ -57,6 +58,7 @@ const SPRAAK = {
     tom: 'No sectors match that search.', logg: 'The measure changes: actual boulders',
     alleKnapp: 'Expand all areas', alleLukk: 'Collapse all areas',
     klSum: '1,877 of 5,935 boulders', klTally: 'All 90 sectors across 19 areas.',
+    klRen: 'None of 2,339 boulders burned',
   },
 };
 
@@ -112,6 +114,8 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     (await page.locator('.clus .g').first().innerText()).startsWith('MONT AIGU'));
   await t('sammendraget viser blokktallet', async () =>
     nbsp(await page.locator('.clus', { hasText: 'TROIS PIGNONS' }).first().innerText()).includes(F.klSum));
+  await t('uberørt område sier at ingenting er brent', async () =>
+    nbsp(await page.locator('.clus', { hasText: 'APREMONT' }).first().innerText()).includes(F.klRen));
   await t('klikk på overskrifta åpner området', async () => {
     const tp = page.locator('.clus', { hasText: 'TROIS PIGNONS' }).first();
     await tp.click(); await page.waitForTimeout(250);

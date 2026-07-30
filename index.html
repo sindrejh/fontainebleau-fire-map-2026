@@ -471,7 +471,7 @@ function tekster(){
      så de må bære nok til at man skjønner om det er verdt å åpne dem. */
   klSekt:n2=>n2===1?'1 sektor':n2+' sektorer',
   klBrent:(b,t2,p)=>'<b>'+n(b)+' av '+n(t2)+' blokker</b>'+pc(p)+' av blokkene i brannflaten',
-  klRen:(t2,km)=>'<b>Ingen av '+n(t2)+' blokker</b>nærmeste brannflate '+k(km)+' km unna',
+  klRen:(t2,km)=>'<b>Ingen av '+n(t2)+' blokker brent</b>nærmeste brannflate '+k(km)+' km unna',
   klAapne:'Åpne alle områder', klLukk:'Lukk alle områder',
   klVis:g=>'Vis sektorene i '+g,
   shapes:[['Brannflate','Offisiell avgrensning fra Copernicus EMS, satellittbilde med 2 meters oppløsning tatt 19. juli.'],
@@ -548,7 +548,7 @@ function tekster(){
   ingen:'No sectors match that search.',
   klSekt:n2=>n2===1?'1 sector':n2+' sectors',
   klBrent:(b,t2,p)=>'<b>'+n(b)+' of '+n(t2)+' boulders</b>'+pc(p)+' of the boulders inside the perimeter',
-  klRen:(t2,km)=>'<b>None of '+n(t2)+' boulders</b>nearest burn area '+k(km)+' km away',
+  klRen:(t2,km)=>'<b>None of '+n(t2)+' boulders burned</b>nearest burn area '+k(km)+' km away',
   klAapne:'Expand all areas', klLukk:'Collapse all areas',
   klVis:g=>'Show the sectors in '+g,
   shapes:[['Burn perimeter','The official outline from Copernicus EMS, from a 2 m resolution satellite image taken 19 July.'],
