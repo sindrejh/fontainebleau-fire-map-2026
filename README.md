@@ -29,7 +29,7 @@ All data ligger i én blokk øverst i `<script>`, merket `/* === DATA === */`.
 | `META` | Dato, versjon og alle tallene siden viser |
 | `CAT` | Statuskategoriene med farge og forklaring |
 | `SECTORS` | 90 sektorer med koordinater, andel brent og avstand til brannflate |
-| `SECTORS[].ess` | Satt på de sektorene som også ligger under Essonnes forbud |
+| `SECTORS[].dep` | Departementet sektoren ligger i, `77` eller `91` |
 | `SECTORS[].annenskog` | Skog forbudet omfatter, men kartet ikke tegner |
 | `HISTORIKK` | Endringsloggen, med norsk og engelsk tekst per oppføring |
 | `PTS` | Posisjonen til hver av de 19 137 blokkene, delta-kodet |
@@ -83,12 +83,15 @@ ukevis. Det er dette `ban_until` følger.
 **Essonne** stenger *alle* skoger i departementet over 0,5 hektar, private som
 offentlige, pluss 200 meter rundt dem. Vedtakene varer to–tre døgn og kommer
 tilbake hver gang brannfaren stiger; det skjedde to ganger i juli. Åtte sektorer
-ligger der, og statusen deres kan bli utdatert i løpet av dagen. De er merket med
-`ess` og bærer en egen merknad i infoboksen.
+ligger der, og statusen deres kan bli utdatert i løpet av dagen. De har `dep`
+lik `91` og bærer en egen merknad i infoboksen.
 
-Sju av de åtte er målt mot ONFs eiendomsdata og ligger i skoger med `cinse_dep`
-91. Toit d'Orsay ligger ikke i noen offentlig skog, men i samme område som La
-Troche, 750 meter unna.
+`dep` er målt, ikke antatt: hver blokk er testet mot IGNs departementsgrenser med
+samme kryssingstest som resten. Alle 90 sektorene faller entydig i ett departement
+— 82 i Seine-et-Marne, 8 i Essonne — og ingen ligger på grensa. Skal feltet
+regnes om, hentes grensene fra
+[france-geojson](https://github.com/gregoiredavid/france-geojson) og måles med
+`tools/forbudssone.py`.
 
 Hvilke sektorer et forbud faktisk treffer, avgjøres ikke av områdenavnet hos
 Boolder. Det er en klatreinndeling, ikke en eiendomsgrense. Da arrêté 1266 stengte
