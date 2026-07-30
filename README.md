@@ -29,6 +29,7 @@ All data ligger i én blokk øverst i `<script>`, merket `/* === DATA === */`.
 | `META` | Dato, versjon og alle tallene siden viser |
 | `CAT` | Statuskategoriene med farge og forklaring |
 | `SECTORS` | 90 sektorer med koordinater, andel brent og avstand til brannflate |
+| `HISTORIKK` | Endringsloggen, med norsk og engelsk tekst per oppføring |
 | `PTS` | Posisjonen til hver av de 19 137 blokkene, delta-kodet |
 | `BURN_RINGS` | Brannflaten, 76 polygoner |
 | `FORESTS` | De tre stengte statsskogene |
@@ -59,6 +60,10 @@ Bare disse feltene er ferskvare:
 | `META.ban_until` | Datoen ferdselsforbudet gjelder til, vist i samme kort |
 | `SECTORS[].s` | Statusen på hver sektor — sett `open` ved gjenåpning |
 
+Datoene skrives som `ÅÅÅÅ-MM-DD`. Sida formaterer dem selv, på norsk eller
+engelsk. Går datoen i `ban_until` ut, sier sida fra av seg selv med en varselrute
+i stedet for å vise en utløpt dato som om den fortsatt gjaldt.
+
 `META.n_open` og de andre opptellingene regnes ut av `tools/beregn.py` og skal
 ikke redigeres for hånd. Når ONF gjenåpner en sektor, endres `s` til `open` og
 skriptet kjøres på nytt.
@@ -79,6 +84,44 @@ Skriptet er idempotent — det gir samme resultat uansett hvor mange ganger det
 kjøres. Adgangsstatusen (`open`, `stengt_annet`) rører det ikke; den er en
 menneskelig avgjørelse, ikke noe som følger av brannflaten.
 
+## Endringslogg
+
+`HISTORIKK` er tidslinja sida viser i høyre spalte, nyeste først. Hver oppføring
+peker på en kilde i `SOURCES` og skal bare si det kilden faktisk viser. Vi vet
+for eksempel ikke når den enkelte sektoren ble gjenåpnet, bare hva listene viste
+på gitte datoer — og det er det oppføringen sier.
+
+Oppføringer som er kommet til siden forrige besøk, merkes «Nytt». Sida husker
+den nyeste datoen leseren har sett, i `localStorage`.
+
+Statusendringer føres opp av `tools/logg.py`:
+
+```sh
+python3 tools/logg.py            # vis hva som har endret seg
+python3 tools/logg.py --skriv    # legg oppføringen inn i HISTORIKK
+```
+
+Skriptet sammenlikner statusene i `index.html` med forrige øyeblikksbilde i
+`tools/statuslogg.json`, skriver en oppføring på begge språk om hvilke sektorer
+som skiftet, og setter `META.updated` og `META.access_date`. Arbeidsgangen når
+ONF åpner en sektor er: sett `s` til `open`, kjør `beregn.py`, kjør `logg.py
+--skriv`.
+
+## Språk
+
+Sida finnes på norsk og engelsk i samme fil. Datablokka er stor, så to
+HTML-filer ville doblet vekta og latt oversettelsene gli fra hverandre — i
+stedet ligger all tekst i `tekster()` i `<script>`, og `CAT`, `SOURCES` og
+`HISTORIKK` bærer felter med `_en`-endelse.
+
+Språket velges i denne rekkefølgen: `?lang=nb` eller `?lang=en` i adressa, så
+et tidligere valg fra `localStorage`, så nettleserens språk. Nordiske lesere får
+norsk, alle andre engelsk — ellers står de igjen med en side de ikke kan lese.
+Knappen i toppstripa bytter, og valget følger med i adressa.
+
+Tall og datoer formateres etter språket: `19 137` og `3,9 %` på norsk,
+`19,137` og `3.9%` på engelsk.
+
 ## Røyktest
 
 ```sh
@@ -88,8 +131,10 @@ node tools/royktest.mjs
 ```
 
 Testen sperrer alt nettverk utenfor localhost, så den slår også fast at siden
-virker uten CDN. Den sjekker blant annet at nettleseren teller nøyaktig like
-mange brente blokker som `tools/beregn.py` gjorde.
+virker uten CDN. Den kjører hele suiten på begge språk, og sjekker blant annet
+at nettleseren teller nøyaktig like mange brente blokker som `tools/beregn.py`
+gjorde, at språkbyttet tar med seg kartlagene og den valgte sektoren, og at
+varselet om utløpt ferdselsforbud dukker opp når datoen er passert.
 
 ## Datakilder
 
@@ -161,5 +206,9 @@ trees and smouldering peat, not destroyed forest. Of the 19 137 boulder problems
 in Bleau, 2 104 (11 %) fall inside the burn perimeter, across 15 sectors; five
 sectors have every one of their boulders inside it.
 
-Page text is in Norwegian. Not an official source: always check the prefectural
-decree and bleau.info before you travel.
+The page is available in both Norwegian and English — use the language button in
+the top bar, or add `?lang=en` to the address. It defaults to English unless your
+browser is set to a Scandinavian language.
+
+Not an official source: always check the prefectural decree and bleau.info
+before you travel.
