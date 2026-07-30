@@ -29,6 +29,8 @@ All data ligger i én blokk øverst i `<script>`, merket `/* === DATA === */`.
 | `META` | Dato, versjon og alle tallene siden viser |
 | `CAT` | Statuskategoriene med farge og forklaring |
 | `SECTORS` | 90 sektorer med koordinater, andel brent og avstand til brannflate |
+| `SECTORS[].ess` | Satt på de sektorene som også ligger under Essonnes forbud |
+| `SECTORS[].annenskog` | Skog forbudet omfatter, men kartet ikke tegner |
 | `HISTORIKK` | Endringsloggen, med norsk og engelsk tekst per oppføring |
 | `PTS` | Posisjonen til hver av de 19 137 blokkene, delta-kodet |
 | `BURN_RINGS` | Brannflaten, 76 polygoner |
@@ -58,6 +60,7 @@ Bare disse feltene er ferskvare:
 | `META.updated` | Datoen i toppstripa |
 | `META.access_date` | Datoen faktakortet «Åpne sektorer» viser |
 | `META.ban_until` | Datoen ferdselsforbudet gjelder til, vist i samme kort |
+| `META.ess_until` | Datoen Essonnes siste forbud gjaldt til, vist på de sektorene |
 | `SECTORS[].s` | Statusen på hver sektor — sett `open` ved gjenåpning |
 
 Datoene skrives som `ÅÅÅÅ-MM-DD`. Sida formaterer dem selv, på norsk eller
@@ -67,6 +70,30 @@ i stedet for å vise en utløpt dato som om den fortsatt gjaldt.
 `META.n_open` og de andre opptellingene regnes ut av `tools/beregn.py` og skal
 ikke redigeres for hånd. Når ONF gjenåpner en sektor, endres `s` til `open` og
 skriptet kjøres på nytt.
+
+### To forbud, ikke ett
+
+Sektorene ligger i to departementer, og de har hver sin ordning. Forskjellen er
+grunnen til at `ess` finnes.
+
+**Seine-et-Marne** stenger navngitte skoger — Fontainebleau, Trois Pignons, la
+Commanderie, Nanteau-Poligny og kommuneskogen i Nemours — og vedtakene står i
+ukevis. Det er dette `ban_until` følger.
+
+**Essonne** stenger *alle* skoger i departementet over 0,5 hektar, private som
+offentlige, pluss 200 meter rundt dem. Vedtakene varer to–tre døgn og kommer
+tilbake hver gang brannfaren stiger; det skjedde to ganger i juli. Åtte sektorer
+ligger der, og statusen deres kan bli utdatert i løpet av dagen. De er merket med
+`ess` og bærer en egen merknad i infoboksen.
+
+Sju av de åtte er målt mot ONFs eiendomsdata og ligger i skoger med `cinse_dep`
+91. Toit d'Orsay ligger ikke i noen offentlig skog, men i samme område som La
+Troche, 750 meter unna.
+
+Hvilke sektorer et forbud faktisk treffer, avgjøres ikke av områdenavnet hos
+Boolder. Det er en klatreinndeling, ikke en eiendomsgrense. Da arrêté 1266 stengte
+kommuneskogen i Nemours, lå bare én av de fem sektorene i Boolder-området
+«Nemours» innenfor grensa. Bruk `tools/forbudssone.py` i stedet for å gjette.
 
 ## Regne ut på nytt
 
@@ -83,6 +110,25 @@ python3 tools/beregn.py boolder-data/boolder.db
 Skriptet er idempotent — det gir samme resultat uansett hvor mange ganger det
 kjøres. Adgangsstatusen (`open`, `stengt_annet`) rører det ikke; den er en
 menneskelig avgjørelse, ikke noe som følger av brannflaten.
+
+## Måle mot en eiendomsgrense
+
+`tools/forbudssone.py` svarer på hvilke sektorer et forbud treffer, når forbudet
+gjelder en skog kartet ikke tegner. Den teller blokkproblemene innenfor en
+GeoJSON-grense, med samme projeksjon og kryssingstest som `beregn.py`.
+
+```sh
+python3 tools/forbudssone.py --selvtest          # mål mot brannflaten, der fasiten er kjent
+python3 tools/forbudssone.py nemours.geojson     # mål mot en ny grense
+```
+
+Grensene hentes fra [ONF OpenData](https://geo-onf.opendata.arcgis.com/) som
+GeoJSON. Selvtesten måler mot brannflaten og skal reprodusere `bb` per sektor;
+ryker den, er tallene mot en ny skoggrense ikke verdt å stole på.
+
+Skriptet skriver ingenting. Det rapporterer, og så avgjør et menneske — en sektor
+kan ligge i skogen uten å være omfattet, eller være stengt av en grunn ingen
+polygon kjenner til.
 
 ## Sektorlista
 
@@ -159,6 +205,8 @@ varselet om utløpt ferdselsforbud dukker opp når datoen er passert.
 | Skoggrenser | [ONF OpenData](https://geo-onf.opendata.arcgis.com/), offentlige skoger i fastlands-Frankrike | Åpne data |
 | Sektorer og blokker | [Boolder](https://github.com/boolder-org/boolder-data) | CC BY 4.0 |
 | Åpen/stengt | [CrashPad Tours](https://crashpadtours.fr/fontainebleau-incendie-secteurs-ouverts/) | — |
+| Ferdselsforbud, Seine-et-Marne | Arrêtés 2026/CAB/SIDPC/1265 og 1266 av 29.07.2026 | Offentlig vedtak |
+| Ferdselsforbud, Essonne | Arrêtés 2026-DDT-SEAF av 07.07.2026 og 2026-PREF-DCSIPC-SIDPC-1244 av 27.07.2026 | Offentlig vedtak |
 | Bakgrunnskart | OpenStreetMap, CARTO, Esri | Se attribusjon i kartet |
 
 ## Lisens

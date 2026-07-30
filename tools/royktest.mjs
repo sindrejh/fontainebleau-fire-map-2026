@@ -49,6 +49,8 @@ const SPRAAK = {
     alleKnapp: 'Åpne alle områder', alleLukk: 'Lukk alle områder',
     klSum: '1 877 av 5 935 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
     klRen: 'Ingen av 2 339 blokker brent',
+    ess: 'Ligger i Essonne.', nemours: 'Forêt communale de Nemours',
+    ikkeher: 'gjelder ikke her',
   },
   en: {
     h1: 'What the fire actually took.', nav: 'MAP',
@@ -59,6 +61,8 @@ const SPRAAK = {
     alleKnapp: 'Expand all areas', alleLukk: 'Collapse all areas',
     klSum: '1,877 of 5,935 boulders', klTally: 'All 90 sectors across 19 areas.',
     klRen: 'None of 2,339 boulders burned',
+    ess: 'Lies in the Essonne.', nemours: 'Forêt communale de Nemours',
+    ikkeher: 'does not apply here',
   },
 };
 
@@ -94,13 +98,13 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   for (const n of F.tall) await t(`«${n}» finnes`, () => kropp.includes(n));
 
   console.log('— endringsloggen —');
-  await t('ti oppføringer', async () => (await page.locator('.tl li').count()) === 10 ? '10' : false);
+  await t('elleve oppføringer', async () => (await page.locator('.tl li').count()) === 11 ? '11' : false);
   await t('nyeste står øverst', async () =>
     (await page.locator('.tl li').first().innerText()).includes(F.logg));
   await t('oppføringene lenker til kilder', async () =>
     (await page.locator('.tl .k').count()) >= 5);
   await t('datoene er maskinlesbare', async () =>
-    (await page.locator('.tl time[datetime]').count()) === 10);
+    (await page.locator('.tl time[datetime]').count()) === 11);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
 
@@ -156,6 +160,26 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     nbsp(await page.locator('.row .pct').first().innerText()) === F.pct);
   await t('blokkprikker tegnet i kartet', async () =>
     await page.evaluate(() => document.querySelectorAll('canvas').length > 0));
+  /* Essonne har sitt eget forbud, som kommer og går raskere enn sida oppdateres.
+     Merknaden er hele grunnen til at sektorene er skilt ut, så den må vises. */
+  await t('Essonne-sektor bærer merknaden', async () => {
+    await page.fill('#q', 'Haute Pierre'); await page.waitForTimeout(250);
+    await page.locator('.row').first().click(); await page.waitForTimeout(900);
+    return (await page.locator('.picked').innerText()).includes(F.ess);
+  });
+  await t('sektor i Seine-et-Marne bærer den ikke', async () => {
+    await page.fill('#q', 'Rocher Gréau'); await page.waitForTimeout(250);
+    await page.locator('.row').first().click(); await page.waitForTimeout(900);
+    return !(await page.locator('.picked').innerText()).includes(F.ess);
+  });
+  /* Mont d'Olivet ligger utenfor de tre statsskogene, men innenfor forbudet.
+     Sier sida «forbudet gjelder ikke her», er det direkte feil. */
+  await t('Mont d’Olivet sies å være innenfor forbudet', async () => {
+    await page.fill('#q', 'Olivet'); await page.waitForTimeout(250);
+    await page.locator('.row').first().click(); await page.waitForTimeout(900);
+    const s = await page.locator('.picked').innerText();
+    return s.includes(F.nemours) && !s.includes(F.ikkeher);
+  });
 
   console.log('— søk og sortering —');
   await t('søk uten aksent finner Ségognole', async () => {
