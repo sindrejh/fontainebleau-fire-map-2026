@@ -11,6 +11,7 @@ desktop.ini
 *~
 
 # Arbeidsfiler som ikke hører til på nett
+__pycache__/
 scratch/
 tmp/
 *.log
