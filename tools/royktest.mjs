@@ -94,13 +94,13 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   for (const n of F.tall) await t(`«${n}» finnes`, () => kropp.includes(n));
 
   console.log('— endringsloggen —');
-  await t('sju oppføringer', async () => (await page.locator('.tl li').count()) === 7 ? '7' : false);
+  await t('åtte oppføringer', async () => (await page.locator('.tl li').count()) === 8 ? '8' : false);
   await t('nyeste står øverst', async () =>
     (await page.locator('.tl li').first().innerText()).includes(F.logg));
   await t('oppføringene lenker til kilder', async () =>
     (await page.locator('.tl .k').count()) >= 5);
   await t('datoene er maskinlesbare', async () =>
-    (await page.locator('.tl time[datetime]').count()) === 7);
+    (await page.locator('.tl time[datetime]').count()) === 8);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
 
@@ -236,7 +236,7 @@ console.log('\n══ språkbytte ══');
 
 console.log('\n══ utløpt ferdselsforbud ══');
 for (const [lang, bit] of [['nb', 'Den datoen er passert'], ['en', 'That date has passed']]) {
-  const { page } = await nySide({ q: '?lang=' + lang, tid: '2026-08-03T09:00:00' });
+  const { page } = await nySide({ q: '?lang=' + lang, tid: '2026-08-10T09:00:00' });
   await t(`varselet vises på ${lang}`, async () =>
     (await page.locator('#warn').isVisible()) &&
     (await page.locator('#warn').innerText()).includes(bit));
