@@ -360,23 +360,50 @@ if(typeof L==="undefined"){
 
  const forestLayer=L.layerGroup(),burnLayer=L.layerGroup(),secLayer=L.layerGroup(),placeLayer=L.layerGroup();
  FORESTS.forEach(f=>f.rings.forEach(r=>
-  L.polygon(r,{color:'#4E6B3C',weight:1.1,opacity:.9,fillColor:'#6E8C58',fillOpacity:.16})
+  L.polygon(r,{color:'#4E6B3C',weight:1.1,opacity:.9,fillColor:'#6E8C58',fillOpacity:.16,bubblingMouseEvents:false})
    .bindPopup('<p class="pop-t">'+f.n+'</p><p class="pop-m">'+f.ha.toLocaleString('nb-NO')+' ha · stengt</p>Statsskog omfattet av ferdselsforbudet. Grensene er faktiske eiendomsgrenser fra ONFs åpne data.')
    .addTo(forestLayer)));
- BURN_RINGS.forEach(r=>L.polygon(r,{color:'#8E2E17',weight:1,opacity:.95,fillColor:'#C8492A',fillOpacity:.62})
+ BURN_RINGS.forEach(r=>L.polygon(r,{color:'#8E2E17',weight:1,opacity:.95,fillColor:'#C8492A',fillOpacity:.62,bubblingMouseEvents:false})
   .bindPopup('<p class="pop-t">Brannflate</p><p class="pop-m">Copernicus EMS · bilde 19.07.2026</p>Én av 76 atskilte flater. Til sammen '+META.burn_ha+' hektar.').addTo(burnLayer));
  PLACES.forEach(p=>L.marker([p.lat,p.lon],{icon:L.divIcon({className:'',html:
   '<div style="font:500 11.5px/1 var(--mono);letter-spacing:.04em;color:#2A2A24;white-space:nowrap;transform:translate(-50%,-50%);text-shadow:0 0 3px #E2DCCC,0 0 3px #E2DCCC,0 0 3px #E2DCCC">'+p.n+'</div>'})}).addTo(placeLayer));
 
  const marks={};
+
+ /* Sektorprikkene ligger tett — på telefon er nabosektoren typisk 13 piksler unna, mindre
+    enn en fingertupp. Et trykk velger derfor sektoren nærmest der fingeren traff, ikke den
+    prikken som tilfeldigvis ligger øverst, og treffer også et lite stykke utenfor prikken. */
+ const TAP_SLACK=26;
+ function selectNear(latlng,fallback){
+  const pt=map.latLngToContainerPoint(latlng);
+  if(fallback>=0&&!active[SECTORS[fallback].s])fallback=-1;
+  let best=fallback,bd=TAP_SLACK;
+  SECTORS.forEach((s,i)=>{
+   if(!active[s.s])return;
+   const d=pt.distanceTo(map.latLngToContainerPoint([s.lat,s.lon]));
+   if(d<=bd){bd=d;best=i;}});
+  if(best>=0)select(best);
+ }
+
  SECTORS.forEach((s,i)=>{
-  const m=L.circleMarker([s.lat,s.lon],{radius:s.brent>0?8:6,color:'#F7F4EB',weight:2,fillColor:CAT[s.s].c,fillOpacity:1});
+  const m=L.circleMarker([s.lat,s.lon],{radius:s.brent>0?8:6,color:'#F7F4EB',weight:2,fillColor:CAT[s.s].c,
+    fillOpacity:1,bubblingMouseEvents:false});
   m.bindTooltip(s.n+(s.brent>0?' — '+s.brent+' %':''),{direction:'right',offset:[9,0]});
-  m.on('click',()=>select(i)); m.addTo(secLayer); marks[i]=m;});
+  m.on('click',e=>selectNear(e.latlng,i)); m.addTo(secLayer); marks[i]=m;});
+
+ /* På berøringsskjerm legges en usynlig, større treffflate oppå hver prikk, slik at et
+    trykk som bommer med noen piksler — eller lander på en brannflate — likevel treffer
+    sektoren. Ligger de oppå hverandre, avgjør selectNear hvilken som er nærmest. */
+ if(window.matchMedia('(pointer:coarse)').matches)
+  SECTORS.forEach((s,i)=>L.circleMarker([s.lat,s.lon],{radius:15,stroke:false,fillOpacity:.001,
+    bubblingMouseEvents:false}).on('click',e=>selectNear(e.latlng,i)).addTo(secLayer));
+
+ map.on('click',e=>selectNear(e.latlng,-1));
 
  forestLayer.addTo(map);burnLayer.addTo(map);secLayer.addTo(map);
+ /* Utslått lagliste dekker en god del av kartet på telefon — der starter den sammenslått. */
  L.control.layers(null,{'Stengt statsskog':forestLayer,'Brannflate':burnLayer,'Sektorer':secLayer,'Steder':placeLayer},
-   {position:'topright',collapsed:false}).addTo(map);
+   {position:'topright',collapsed:window.matchMedia('(max-width:760px)').matches}).addTo(map);
  L.control.scale({imperial:false}).addTo(map);
 
  const picked=document.getElementById('picked');
