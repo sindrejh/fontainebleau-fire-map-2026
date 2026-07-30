@@ -94,13 +94,13 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   for (const n of F.tall) await t(`«${n}» finnes`, () => kropp.includes(n));
 
   console.log('— endringsloggen —');
-  await t('åtte oppføringer', async () => (await page.locator('.tl li').count()) === 8 ? '8' : false);
+  await t('ni oppføringer', async () => (await page.locator('.tl li').count()) === 9 ? '9' : false);
   await t('nyeste står øverst', async () =>
     (await page.locator('.tl li').first().innerText()).includes(F.logg));
   await t('oppføringene lenker til kilder', async () =>
     (await page.locator('.tl .k').count()) >= 5);
   await t('datoene er maskinlesbare', async () =>
-    (await page.locator('.tl time[datetime]').count()) === 8);
+    (await page.locator('.tl time[datetime]').count()) === 9);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
 
