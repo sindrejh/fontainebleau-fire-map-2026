@@ -3,16 +3,22 @@
 Interaktivt kart over hvilke buldresektorer i Fontainebleau som ble rammet av
 skogbrannen i juli 2026, og hvilke som bare er stengt.
 
-**Hovedfunnet:** brannen tok 923 hektar. Ferdselsforbudet stengte 23 613 hektar.
-Bare 3,9 prosent av det stengte arealet har faktisk brent.
+**Hovedfunnet:** brannen tok 926 hektar. Ferdselsforbudet stengte 23 613 hektar.
+Bare 3,9 prosent av det stengte arealet har faktisk brent. Av de 19 137
+blokkproblemene i Bleau ligger 2 104 — 11 prosent — innenfor brannflaten.
 
 ## Slik publiserer du siden
 
-Alt ligger i `index.html`. Ingen byggesteg, ingen avhengigheter å installere.
+Ingen byggesteg og ingen avhengigheter å installere. Siden er `index.html` pluss
+mappa `vendor/`, som inneholder Leaflet og skriftene.
 
-1. Legg filen i et offentlig repo
+1. Legg filene i et offentlig repo
 2. Settings → Pages → Source: **Deploy from a branch**, `main` og `/ (root)`
 3. Siden dukker opp på `https://brukernavn.github.io/reponavn/`
+
+Alt utenom kartflisene lastes fra samme domene som siden selv. Blokkeres et CDN,
+eller er nettet borte, står siden likevel — bare bakgrunnskartet faller bort, og
+det bytter selv til neste leverandør i lista.
 
 ## Slik oppdateres innholdet
 
@@ -20,22 +26,27 @@ All data ligger i én blokk øverst i `<script>`, merket `/* === DATA === */`.
 
 | Konstant | Innhold |
 |---|---|
-| `META` | Dato, versjon og tallene i faktastripa |
+| `META` | Dato, versjon og alle tallene siden viser |
 | `CAT` | Statuskategoriene med farge og forklaring |
 | `SECTORS` | 90 sektorer med koordinater, andel brent og avstand til brannflate |
+| `HISTORIKK` | Endringsloggen, med norsk og engelsk tekst per oppføring |
+| `PTS` | Posisjonen til hver av de 19 137 blokkene, delta-kodet |
 | `BURN_RINGS` | Brannflaten, 76 polygoner |
 | `FORESTS` | De tre stengte statsskogene |
 | `PLACES` | Stedsnavnene i kartlaget «Steder», avslått som standard |
 | `BOOLDER` | Sektornavn → Boolder-slug, brukt til lenka i infoboksen |
 | `SOURCES` | Kildelista nederst på siden |
 
+**Ingen tall står i prosaen.** Alt fra ingressen til bunnteksten bygges av
+`META` når siden lastes. Tidligere sto hovedtallet tre steder med tre ulike
+verdier — 921, 923 og 926 hektar samtidig — og det er grunnen til at det nå bare
+finnes ett sted.
+
 Boolder-slugene følger ingen fast regel — `Rocher d'Avon` blir `rocher-avon`,
 `Buthiers Piscine` blir `buthiers`, `Cuvier Petit Rempart` blir `petit-rempart`.
 De er sjekket mot boolder.com én for én. Hvis Boolder gir en sektor nytt navn,
 må slugen kontrolleres manuelt; adressen blir
 `https://www.boolder.com/en/fontainebleau/<slug>`.
-
-Når ONF gjenåpner en sektor, endres feltet `s` for den sektoren til `open`.
 
 ### Hva som må oppdateres over tid
 
@@ -45,13 +56,85 @@ Bare disse feltene er ferskvare:
 | Felt | Hva det styrer |
 |---|---|
 | `META.updated` | Datoen i toppstripa |
-| `META.n_open` | Tallet i faktakortet «Åpne sektorer» |
-| `META.access_date` | Datoen samme kort viser |
+| `META.access_date` | Datoen faktakortet «Åpne sektorer» viser |
 | `META.ban_until` | Datoen ferdselsforbudet gjelder til, vist i samme kort |
 | `SECTORS[].s` | Statusen på hver sektor — sett `open` ved gjenåpning |
 
-Overskrift, ingress, forholdsbånd og de tre første faktakortene handler om
-brannens utstrekning. De står seg uansett hva som åpner igjen.
+Datoene skrives som `ÅÅÅÅ-MM-DD`. Sida formaterer dem selv, på norsk eller
+engelsk. Går datoen i `ban_until` ut, sier sida fra av seg selv med en varselrute
+i stedet for å vise en utløpt dato som om den fortsatt gjaldt.
+
+`META.n_open` og de andre opptellingene regnes ut av `tools/beregn.py` og skal
+ikke redigeres for hånd. Når ONF gjenåpner en sektor, endres `s` til `open` og
+skriptet kjøres på nytt.
+
+## Regne ut på nytt
+
+`tools/beregn.py` er det som produserer blokktallene. Det leser brannflaten fra
+`index.html` og blokkposisjonene fra Boolders database, teller hvor mange blokker
+som ligger innenfor flaten, og skriver resultatet tilbake i datablokka.
+
+```sh
+git clone --depth 1 https://github.com/boolder-org/boolder-data.git
+pip install numpy
+python3 tools/beregn.py boolder-data/boolder.db
+```
+
+Skriptet er idempotent — det gir samme resultat uansett hvor mange ganger det
+kjøres. Adgangsstatusen (`open`, `stengt_annet`) rører det ikke; den er en
+menneskelig avgjørelse, ikke noe som følger av brannflaten.
+
+## Endringslogg
+
+`HISTORIKK` er tidslinja sida viser i høyre spalte, nyeste først. Hver oppføring
+peker på en kilde i `SOURCES` og skal bare si det kilden faktisk viser. Vi vet
+for eksempel ikke når den enkelte sektoren ble gjenåpnet, bare hva listene viste
+på gitte datoer — og det er det oppføringen sier.
+
+Oppføringer som er kommet til siden forrige besøk, merkes «Nytt». Sida husker
+den nyeste datoen leseren har sett, i `localStorage`.
+
+Statusendringer føres opp av `tools/logg.py`:
+
+```sh
+python3 tools/logg.py            # vis hva som har endret seg
+python3 tools/logg.py --skriv    # legg oppføringen inn i HISTORIKK
+```
+
+Skriptet sammenlikner statusene i `index.html` med forrige øyeblikksbilde i
+`tools/statuslogg.json`, skriver en oppføring på begge språk om hvilke sektorer
+som skiftet, og setter `META.updated` og `META.access_date`. Arbeidsgangen når
+ONF åpner en sektor er: sett `s` til `open`, kjør `beregn.py`, kjør `logg.py
+--skriv`.
+
+## Språk
+
+Sida finnes på norsk og engelsk i samme fil. Datablokka er stor, så to
+HTML-filer ville doblet vekta og latt oversettelsene gli fra hverandre — i
+stedet ligger all tekst i `tekster()` i `<script>`, og `CAT`, `SOURCES` og
+`HISTORIKK` bærer felter med `_en`-endelse.
+
+Språket velges i denne rekkefølgen: `?lang=nb` eller `?lang=en` i adressa, så
+et tidligere valg fra `localStorage`, så nettleserens språk. Nordiske lesere får
+norsk, alle andre engelsk — ellers står de igjen med en side de ikke kan lese.
+Knappen i toppstripa bytter, og valget følger med i adressa.
+
+Tall og datoer formateres etter språket: `19 137` og `3,9 %` på norsk,
+`19,137` og `3.9%` på engelsk.
+
+## Røyktest
+
+```sh
+python3 -m http.server 8931 &
+npm i playwright
+node tools/royktest.mjs
+```
+
+Testen sperrer alt nettverk utenfor localhost, så den slår også fast at siden
+virker uten CDN. Den kjører hele suiten på begge språk, og sjekker blant annet
+at nettleseren teller nøyaktig like mange brente blokker som `tools/beregn.py`
+gjorde, at språkbyttet tar med seg kartlagene og den valgte sektoren, og at
+varselet om utløpt ferdselsforbud dukker opp når datoen er passert.
 
 ## Datakilder
 
@@ -59,26 +142,46 @@ brannens utstrekning. De står seg uansett hva som åpner igjen.
 |---|---|---|
 | Brannflate | [Copernicus EMS EMSR894](https://mapping.emergency.copernicus.eu/activations/EMSR894/), produkt Grading Monit01, satellittbilde 19.07.2026 | © European Union |
 | Skoggrenser | [ONF OpenData](https://geo-onf.opendata.arcgis.com/), offentlige skoger i fastlands-Frankrike | Åpne data |
-| Sektorer | [Boolder](https://github.com/boolder-org/boolder-data) | CC BY 4.0 |
+| Sektorer og blokker | [Boolder](https://github.com/boolder-org/boolder-data) | CC BY 4.0 |
 | Åpen/stengt | [CrashPad Tours](https://crashpadtours.fr/fontainebleau-incendie-secteurs-ouverts/) | — |
 | Bakgrunnskart | OpenStreetMap, CARTO, Esri | Se attribusjon i kartet |
 
 ## Lisens
 
 Koden i `index.html` er MIT-lisensiert, se [LICENSE](LICENSE). Dataene siden
-bygger på har sine egne vilkår — Boolders sektordata er CC BY 4.0, brannflaten
-er © European Union / Copernicus EMS. Vilkårene står i lisensfilen og i
+bygger på har sine egne vilkår — Boolders sektor- og blokkdata er CC BY 4.0,
+brannflaten er © European Union / Copernicus EMS. Leaflet og skriftene under
+`vendor/` har egne lisensfiler. Vilkårene står i lisensfilen og i
 kildetabellen over.
 
 ## Metode
 
-Sektorenes yttergrenser fra Boolder er lagt over Copernicus-brannflaten, og
-andelen overlapp er regnet ut i projeksjonen Lambert-93 (EPSG:2154).
-Geometrien er forenklet for visning, med under 0,3 prosent arealavvik.
+Hver av de 19 137 blokkene i Boolders datasett testes mot Copernicus-brannflaten
+med en kryssingstest. 2 104 av dem ligger innenfor. Det er dette tallet siden
+oppgir per sektor.
 
-Svakhet å kjenne til: andelen brent er regnet mot sektorens rektangulære
-yttergrense, ikke mot hver enkelt blokk. En sektor med lav prosent kan likevel
-ha brent kraftig i ett hjørne.
+Tidligere regnet siden andelen brent mot sektorens rektangulære yttergrense.
+Det målet var upresist begge veier: Diplodocus ble oppgitt til 31,2 prosent
+brent, men alle de 159 blokkproblemene i sektoren ligger inne i brannflaten,
+mens Rocher Fin hadde 6 prosent av rektangelet innenfor uten at én eneste av de
+253 blokkene er berørt. Det gamle tallet er beholdt i feltet `flate` og vises
+som sammenlikning i infoboksen.
+
+Koordinatene rundes til hundretusendels grad — omtrent en meter — *før* de måles
+mot brannflaten. Det er de samme koordinatene siden publiserer og tegner, så
+tallet, prikken i kartet og en eventuell etterregning stemmer overens.
+
+### Svakheter å kjenne til
+
+* Brannflaten er forenklet for visning. De forenklede polygonene dekker 975
+  hektar mot Copernicus' 926 — omtrent 5 prosent for mye. Tellingen er derfor i
+  overkant raus helt inntil brannkanten.
+* Blokkoordinatene fra Boolder er GPS-satte og treffer på noen meter.
+* En blokk utenfor flaten kan være svidd likevel, og en blokk innenfor kan stå
+  uskadd. Flaten sier hvor det brant, ikke hva som skjedde med hver enkelt stein.
+* 50 av de 90 sektorene ligger utenfor området Copernicus gjennomgikk. Alle
+  ligger minst 2,22 km fra nærmeste kartlagte brannflate og er derfor ikke
+  berørt av denne brannen.
 
 ## Forbehold
 
@@ -93,12 +196,19 @@ før avreise.
 ## In English
 
 Interactive map of the July 2026 Fontainebleau wildfire and its effect on
-bouldering access. The official Copernicus EMS burn perimeter is overlaid on
-Boolder's area boundaries to show how much of each sector actually burned.
+bouldering access. The official Copernicus EMS burn perimeter is tested against
+every single boulder problem in Boolder's dataset, rather than against a
+bounding box per sector.
 
-923 hectares burned. 23 613 hectares remain closed. Only 3.9 % of the closed
-area was affected — the closure is about hazardous trees and smouldering peat,
-not destroyed forest.
+926 hectares burned, in 76 separate patches. 23 613 hectares remain closed, and
+only 3.9 % of that closed area was affected — the closure is about hazardous
+trees and smouldering peat, not destroyed forest. Of the 19 137 boulder problems
+in Bleau, 2 104 (11 %) fall inside the burn perimeter, across 15 sectors; five
+sectors have every one of their boulders inside it.
 
-Page text is in Norwegian. Not an official source: always check the prefectural
-decree and bleau.info before you travel.
+The page is available in both Norwegian and English — use the language button in
+the top bar, or add `?lang=en` to the address. It defaults to English unless your
+browser is set to a Scandinavian language.
+
+Not an official source: always check the prefectural decree and bleau.info
+before you travel.

@@ -1,0 +1,12 @@
+Skriftene i denne mappa er hentet fra Google Fonts og lagt lokalt slik at siden
+ikke gjør noen forespørsel til tredjepart. Begge er lisensiert under
+SIL Open Font License 1.1 — http://scripts.sil.org/OFL
+
+* Bricolage Grotesque — © 2022 The Bricolage Project Authors
+  https://github.com/ateliertriay/bricolage
+* IBM Plex Sans og IBM Plex Mono — © 2017 IBM Corp.
+  https://github.com/IBM/plex
+
+Filene i files/ er delmengdene «latin» og «latin-ext» av variabelskriftene,
+uendret fra det Google Fonts leverer. fonts.css er Googles egen @font-face-CSS
+med URL-ene pekt om til de lokale filene.

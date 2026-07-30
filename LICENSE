@@ -28,7 +28,14 @@ siden bygger på. Datasettene har sine egne vilkår:
 * Brannflate — © European Union, Copernicus Emergency Management Service
   (EMSR894). Se https://emergency.copernicus.eu/ for vilkår.
 * Skoggrenser — Office National des Forêts, åpne data.
-* Sektorer og koordinater — Boolder, lisensiert CC BY 4.0
+* Sektorer, blokkposisjoner og koordinater — Boolder, lisensiert CC BY 4.0
   (https://creativecommons.org/licenses/by/4.0/).
 * Bakgrunnskart — OpenStreetMap-bidragsytere, CARTO og Esri, se attribusjonen
   i kartet.
+
+Tredjepartskode og skrifter som ligger i repoet under vendor/:
+
+* vendor/leaflet — Leaflet 1.9.4, BSD 2-Clause. Lisensteksten ligger i
+  vendor/leaflet/LICENSE.
+* vendor/fonts — Bricolage Grotesque og IBM Plex Sans/Mono, SIL Open Font
+  License 1.1. Lisensteksten ligger i vendor/fonts/LICENSE.
