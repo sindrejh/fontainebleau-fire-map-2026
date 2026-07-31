@@ -105,6 +105,41 @@ select{font:400 13px/1 var(--mono);padding:6px 8px;border:1px solid var(--gres2)
 .dotlive{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px}
 #map{height:min(72vh,660px);background:#CFC8B8}
 @media(max-width:760px){#map{height:56vh}}
+.fs{margin-left:10px;font:500 10.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+  color:#3A362E;background:var(--craie);border:1px solid var(--gres2);border-radius:2px;
+  padding:8px 10px;cursor:pointer;white-space:nowrap;transition:color 140ms,border-color 140ms}
+.fs:hover{color:var(--braise);border-color:var(--braise)}
+.fs:focus-visible{outline:2px solid var(--braise);outline-offset:2px}
+.fs[hidden]{display:none}
+
+/* ---------- kartet i fullskjerm ----------
+   Detaljpanelet står under kartet, og der er det utenfor synsfeltet så snart
+   kartet fyller skjermen. I fullskjerm flyttes det samme elementet opp som en
+   infoboks oppå kartet — ingen kopi av teksten, bare en annen plassering. */
+html.kartfull,html.kartfull body{overflow:hidden}
+.sheet.full{position:fixed;inset:0;z-index:1300;/* over toppstripa, som ligger på 1200 */
+  margin:0;border-radius:0;display:flex;flex-direction:column;overflow:hidden}
+.sheet.full .mapbox{position:relative;flex:1 1 auto;min-height:0;display:flex}
+.sheet.full #map{flex:1 1 auto;height:auto;min-height:0}
+.sheet.full .pickwrap{position:absolute;top:10px;left:10px;z-index:1100;/* over Leafletkontrollene */
+  width:min(370px,calc(100% - 20px));max-height:calc(100% - 20px);display:flex;flex-direction:column;
+  background:var(--gres);border:1px solid #BEB6A2;box-shadow:0 8px 28px rgba(20,17,14,.42)}
+/* Boksen skjules med klasse, ikke med hidden: display:flex over ville slått
+   nettleserens egen regel for skjulte elementer, og en tom boks blitt stående. */
+.sheet.full .pickwrap.skjult{display:none}
+.sheet.full .picked{border-top:0;padding:18px 18px 20px;min-height:0;overflow:auto}
+.sheet.full .pname{padding-right:32px}
+.sheet.full .pcols{grid-template-columns:1fr;gap:14px}
+.sheet.full .pclose{display:block}
+.pclose{display:none;position:absolute;top:8px;right:8px;z-index:1;width:30px;height:30px;padding:0;
+  background:var(--craie);border:1px solid var(--gres2);border-radius:2px;color:#3A362E;
+  font:400 17px/1 var(--body);cursor:pointer}
+.pclose:hover{color:var(--braise);border-color:var(--braise)}
+.pclose:focus-visible{outline:2px solid var(--braise);outline-offset:2px}
+@media(max-width:700px){
+  .sheet.full .sheet-top{padding:8px 10px}
+  .sheet.full .pickwrap{top:auto;bottom:10px;left:10px;right:10px;width:auto;max-height:50%}
+}
 
 /* ---------- valgt sektor ---------- */
 .picked{border-top:1px solid var(--gres2);padding:20px 22px 24px;min-height:132px}
@@ -312,10 +347,18 @@ footer a{color:var(--ash);text-decoration:underline;text-underline-offset:2px}
       <label for="prov" id="provlab"></label>
       <select id="prov"></select>
       <span id="tilestate" role="status"></span>
+      <button class="fs" id="fskjerm" type="button" aria-pressed="false"></button>
     </div>
-    <div id="map" role="region"></div>
-    <div class="picked" id="picked" tabindex="-1" aria-live="polite">
-      <p class="empty"></p>
+    <!-- Kartet og detaljpanelet ligger i samme boks, slik at panelet kan legge
+         seg oppå kartet når kartet fyller skjermen. -->
+    <div class="mapbox">
+      <div id="map" role="region"></div>
+      <div class="pickwrap" id="pickwrap">
+        <button class="pclose" id="pclose" type="button"><span aria-hidden="true">×</span></button>
+        <div class="picked" id="picked" tabindex="-1" aria-live="polite">
+          <p class="empty"></p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -455,6 +498,7 @@ function tekster(){
   bakgrunn:'Bakgrunnskart', kartnavn:'Kart over brannflaten og buldresektorene. Samme opplysninger finnes i sektortabellen under kartet.',
   kobler:'Kobler til…', prover:p=>'Prøver '+p+'…', svarer:p=>p+' svarer ikke — velg en annen',
   tomvalg:'Velg en sektor i kartet eller i tabellen under, så kommer detaljene hit.',
+  fullPaa:'Fullskjerm', fullAv:'Avslutt fullskjerm', lukkInfo:'Lukk infoboksen',
   hFlater:'Flatene i kartet', hAlle:'Alle '+M.n_total+' sektorer', hStatus:'Status',
   hLogg:'Endringslogg', hMetode:'Hva tallene bygger på', hKilder:'Kilder',
   loggnote:'Hva som er dokumentert om brannen, forbudet og denne sida. Oppføringene sier bare det kildene faktisk viser.',
@@ -541,6 +585,7 @@ function tekster(){
   bakgrunn:'Basemap', kartnavn:'Map of the burn perimeter and the bouldering sectors. The same information is in the sector table below the map.',
   kobler:'Connecting…', prover:p=>'Trying '+p+'…', svarer:p=>p+' is not responding — pick another',
   tomvalg:'Pick a sector on the map or in the table below, and the details appear here.',
+  fullPaa:'Full screen', fullAv:'Exit full screen', lukkInfo:'Close the info box',
   hFlater:'What the map shows', hAlle:'All '+M.n_total+' sectors', hStatus:'Status',
   hLogg:'Changelog', hMetode:'What the figures rest on', hKilder:'Sources',
   loggnote:'What is documented about the fire, the ban and this page. Each entry states only what the sources actually show.',
@@ -654,6 +699,10 @@ function tegnTekst(){
 
  el('provlab').textContent=T.bakgrunn;
  el('map').setAttribute('aria-label',T.kartnavn);
+ /* Knappeteksten følger tilstanden, og tilstanden står i aria-pressed. Da
+    trenger språkbyttet ikke vite om kartet står i fullskjerm. */
+ const fk=el('fskjerm');fk.textContent=fk.getAttribute('aria-pressed')==='true'?T.fullAv:T.fullPaa;
+ const lukk=el('pclose');lukk.setAttribute('aria-label',T.lukkInfo);lukk.title=T.lukkInfo;
  el('picked').querySelector('.empty')&&(el('picked').querySelector('.empty').textContent=T.tomvalg);
 
  el('sektorer').textContent=T.hAlle;
@@ -695,6 +744,8 @@ requestAnimationFrame(()=>{
 
 if(typeof L==="undefined"){
   tegnTekst();
+  /* Uten kart er det ingenting å vise i fullskjerm. */
+  el('fskjerm').hidden=true;
   el('map').innerHTML='<p class="fail">'+(LANG==='nb'
     ?'Kartbiblioteket lastet ikke. Åpne siden i en vanlig nettleserfane.'
     :'The map library did not load. Open this page in an ordinary browser tab.')+'</p>';
@@ -813,8 +864,60 @@ if(typeof L==="undefined"){
  }
  L.control.scale({imperial:false}).addTo(map);
 
- const picked=el('picked');
- let cur=-1;
+ const picked=el('picked'),pickwrap=el('pickwrap'),sheet=el('kart'),fsKnapp=el('fskjerm');
+ let cur=-1,fullskjerm=false,infoLukket=false;
+
+ /* ---- fullskjerm ----
+    Panelet med detaljene ligger under kartet. Fyller kartet skjermen, er
+    panelet utenfor synsfeltet, og et sektorvalg ser ut til å svare med
+    ingenting. I fullskjerm står derfor det samme elementet oppå kartet. */
+ function oppdaterInfoboks(){
+  pickwrap.classList.toggle('skjult',fullskjerm&&(cur<0||infoLukket));
+ }
+ /* Den delen av kartet infoboksen ikke dekker. Uten dette rammes sektoren inn
+    midt på kartflata, altså bak boksen — boksen står til venstre på brede
+    skjermer og nederst på smale. */
+ function ledigKart(){
+  if(!fullskjerm||pickwrap.classList.contains('skjult'))return{};
+  const b=pickwrap.getBoundingClientRect();
+  return window.matchMedia('(max-width:700px)').matches
+   ?{paddingBottomRight:L.point(0,b.height+16)}
+   :{paddingTopLeft:L.point(b.width+16,0)};
+ }
+ function settFull(paa){
+  if(paa===fullskjerm)return;
+  fullskjerm=paa;infoLukket=false;
+  sheet.classList.toggle('full',paa);
+  document.documentElement.classList.toggle('kartfull',paa);
+  fsKnapp.setAttribute('aria-pressed',String(paa));
+  fsKnapp.textContent=paa?T.fullAv:T.fullPaa;
+  /* Zoomknappene står nøyaktig der infoboksen skal ligge. De flytter heller
+     enn å bli liggende under den. */
+  if(map.zoomControl)map.zoomControl.setPosition(paa?'topright':'topleft');
+  oppdaterInfoboks();
+  /* Leaflet måler ikke kartet på nytt av seg selv når boksen skifter størrelse. */
+  requestAnimationFrame(()=>map.invalidateSize());
+ }
+ /* Ekte fullskjerm der nettleseren tillater det. iOS Safari gjør det ikke for
+    annet enn video, og der holder CSS-varianten kartet like stort likevel. */
+ function ekteFull(paa){
+  try{
+   if(paa){
+    const f=sheet.requestFullscreen||sheet.webkitRequestFullscreen;
+    if(f){const p=f.call(sheet);if(p&&p.catch)p.catch(()=>{});}
+   }else if(document.fullscreenElement||document.webkitFullscreenElement){
+    const f=document.exitFullscreen||document.webkitExitFullscreen;
+    if(f){const p=f.call(document);if(p&&p.catch)p.catch(()=>{});}
+   }
+  }catch(e){}
+ }
+ fsKnapp.addEventListener('click',()=>{const paa=!fullskjerm;ekteFull(paa);settFull(paa);});
+ /* Nettleserens egen vei ut — Escape eller systemknappen — går utenom knappen vår. */
+ ['fullscreenchange','webkitfullscreenchange'].forEach(n=>document.addEventListener(n,()=>{
+  if(!(document.fullscreenElement||document.webkitFullscreenElement))settFull(false);}));
+ /* Escape må virke også når nettleseren aldri gikk i ekte fullskjerm. */
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&fullskjerm){settFull(false);ekteFull(false);}});
+ el('pclose').addEventListener('click',()=>{infoLukket=true;oppdaterInfoboks();fsKnapp.focus();});
 
  function visPicked(i){
   const s=SECTORS[i];
@@ -860,15 +963,23 @@ if(typeof L==="undefined"){
     .bindTooltip(()=>brent?T.blokkinne:T.blokkute,{direction:'top'})
     .addTo(blockLayer);
    bounds.extend(p);});
+  /* Innholdet på plass før kartet rammes inn: i fullskjerm avgjør størrelsen på
+     infoboksen hvor mye av kartflata som faktisk er ledig. */
+  visPicked(i);
+  /* Et nytt valg åpner infoboksen igjen, også om leseren lukket den forrige. */
+  infoLukket=false;oppdaterInfoboks();
+
   /* Rammer sektoren i stedet for å sette fast zoom: da er blokkprikkene store nok
      til å skilles fra hverandre, uansett hvor liten eller stor sektoren er. */
-  if(bounds.isValid())map.fitBounds(bounds.pad(.45),{maxZoom:16,animate:true});
+  if(bounds.isValid())map.fitBounds(bounds.pad(.45),
+    Object.assign({maxZoom:16,animate:true},ledigKart()));
   else map.setView([s.lat,s.lon],Math.max(map.getZoom(),13),{animate:true});
 
-  visPicked(i);
   /* Uten animasjon: ruller siden mens fingeren er på vei ned, treffer neste trykk en
-     annen rad enn den man siktet på. */
-  picked.scrollIntoView({block:'nearest'});
+     annen rad enn den man siktet på. I fullskjerm står boksen allerede i synsfeltet,
+     og da er det bare innholdet i den som skal tilbake til toppen. */
+  if(fullskjerm)picked.scrollTop=0;
+  else picked.scrollIntoView({block:'nearest'});
  }
 
  /* ---- sektorlista: søk, sortering og statusfiltre ---- */
