@@ -50,7 +50,7 @@ const SPRAAK = {
     klSum: '1 877 av 5 935 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
     klRen: 'Ingen av 2 339 blokker brent',
     ess: 'Ligger i Essonne.', nemours: 'Forêt communale de Nemours',
-    ikkeher: 'gjelder ikke her',
+    ikkeher: 'gjelder ikke her', uavklart: 'Uavklart', stengtTag: 'Stengt',
   },
   en: {
     h1: 'What the fire actually took.', nav: 'MAP',
@@ -62,7 +62,7 @@ const SPRAAK = {
     klSum: '1,877 of 5,935 boulders', klTally: 'All 90 sectors across 19 areas.',
     klRen: 'None of 2,339 boulders burned',
     ess: 'Lies in the Essonne.', nemours: 'Forêt communale de Nemours',
-    ikkeher: 'does not apply here',
+    ikkeher: 'does not apply here', uavklart: 'Unresolved', stengtTag: 'Closed',
   },
 };
 
@@ -98,13 +98,13 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   for (const n of F.tall) await t(`«${n}» finnes`, () => kropp.includes(n));
 
   console.log('— endringsloggen —');
-  await t('elleve oppføringer', async () => (await page.locator('.tl li').count()) === 11 ? '11' : false);
+  await t('tolv oppføringer', async () => (await page.locator('.tl li').count()) === 12 ? '12' : false);
   await t('nyeste står øverst', async () =>
     (await page.locator('.tl li').first().innerText()).includes(F.logg));
   await t('oppføringene lenker til kilder', async () =>
     (await page.locator('.tl .k').count()) >= 5);
   await t('datoene er maskinlesbare', async () =>
-    (await page.locator('.tl time[datetime]').count()) === 11);
+    (await page.locator('.tl time[datetime]').count()) === 12);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
 
@@ -179,6 +179,16 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     await page.locator('.row').first().click(); await page.waitForTimeout(900);
     const s = await page.locator('.picked').innerText();
     return s.includes(F.nemours) && !s.includes(F.ikkeher);
+  });
+
+  /* Uavklart skal verken påstå åpen eller stengt. Ryker dette, har sida begynt
+     å svare på et spørsmål den nettopp har sagt at den ikke kan svare på. */
+  await t('Beauvais er uavklart, uten «stengt»-merkelapp', async () => {
+    await page.fill('#q', 'Beauvais Hameau'); await page.waitForTimeout(250);
+    await page.locator('.row').first().click(); await page.waitForTimeout(900);
+    /* Merkelappene settes i versaler av CSS, og innerText gir dem sånn. */
+    const tags = (await page.locator('.picked .tag').allInnerTexts()).map(s => s.toUpperCase());
+    return tags.includes(F.uavklart.toUpperCase()) && !tags.includes(F.stengtTag.toUpperCase());
   });
 
   console.log('— søk og sortering —');

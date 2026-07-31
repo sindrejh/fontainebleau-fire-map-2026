@@ -27,9 +27,15 @@ testes mot brannflaten, fordi det er de samme koordinatene sida publiserer og
 tegner. Måler du fullpresise koordinater og publiserer avrundede, havner blokker
 inntil brannkanten på hver sin side av grensa i tallet og i kartet.
 
-**Adgangsstatus er en menneskelig avgjørelse.** `open` og `stengt_annet` følger
-av oppslag og vedtak, ikke av brannflaten. `beregn.py` rører dem ikke, og skal
-fortsette å la være.
+**Adgangsstatus er en menneskelig avgjørelse.** `open`, `stengt_annet` og
+`uavklart` følger av oppslag og vedtak, ikke av brannflaten. `beregn.py` rører
+dem ikke, og skal fortsette å la være — de står i `ADGANG`, og en status som
+ikke står der, blir overskrevet ved neste kjøring.
+
+**`uavklart` betyr at vi ikke finner hjemmelen.** Den er ikke en mildere
+«stengt», og den skal ikke settes fordi noe er uoversiktlig. Den sier at
+sektoren er ført som stengt, at vedtaket som stengte den er utløpt, og at vi
+ikke har funnet noe nytt. Finner du hjemmelen, er statusen ikke lenger uavklart.
 
 **Ingen tall i prosaen.** All tekst bygges av `META` i `tekster()`. Hovedtallet
 sto en gang tre steder med tre ulike verdier samtidig. Skal du skrive et tall i

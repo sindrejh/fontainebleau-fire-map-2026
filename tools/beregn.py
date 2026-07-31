@@ -37,8 +37,11 @@ MLON = 111320.0 * math.cos(math.radians(LAT0))
 # Terskler for statuskategoriene, na regnet av andelen blokkproblemer.
 T_MYE, T_DELVIS = 50.0, 10.0
 NAER_KM = 1.0
-# Adgangsstatus er ikke utledet av brannen og skrives ikke over.
-ADGANG = ("open", "stengt_annet")
+# Adgangsstatus er ikke utledet av brannen og skrives ikke over. "uavklart" horer
+# med her: den sier at vi ikke finner hjemmelen, og det er en menneskelig
+# vurdering. Uten den i lista ville kategori() satt Beauvais til "stengt" ved
+# neste kjoring, og vurderingen ville forsvunnet uten spor.
+ADGANG = ("open", "stengt_annet", "uavklart")
 
 
 def les(navn, src, slutt=";\n"):

@@ -62,6 +62,7 @@ Bare disse feltene er ferskvare:
 | `META.ban_until` | Datoen ferdselsforbudet gjelder til, vist i samme kort |
 | `META.ess_until` | Datoen Essonnes siste forbud gjaldt til, vist på de sektorene |
 | `SECTORS[].s` | Statusen på hver sektor — sett `open` ved gjenåpning |
+| | `uavklart` når sektoren er ført som stengt uten at hjemmelen finnes |
 
 Datoene skrives som `ÅÅÅÅ-MM-DD`. Sida formaterer dem selv, på norsk eller
 engelsk. Går datoen i `ban_until` ut, sier sida fra av seg selv med en varselrute
