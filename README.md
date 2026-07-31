@@ -148,8 +148,19 @@ en kopi. Boksen står til venstre på brede skjermer og nederst på smale, og et
 sektorvalg rammes inn i den delen av kartet boksen ikke dekker. Er ingen sektor
 valgt, eller lukker leseren boksen, ligger den ikke i veien.
 
+Tegnforklaringa har samme problem og samme løsning: knappen ved siden av
+fullskjermknappen henter opp de to bolkene som ellers står under kartet —
+«Flatene i kartet» og «Status» — og de samme elementene flyttes tilbake dit når
+fullskjerm avsluttes. Ruta er mørk som sida ellers, fordi fargene i
+tegnforklaringa er skrevet for den bakgrunnen.
+
+De to rutene deler plass, og bare én står framme om gangen. På telefon er det
+ikke rom for to, og på skjerm ville de dekket hver sin del av kartet. Et
+sektorvalg lukker tegnforklaringa, Escape lukker den ruta som står framme før
+den avslutter fullskjerm.
+
 Zoomknappene flytter til høyre side i fullskjerm. Ellers ville de blitt liggende
-under infoboksen.
+under rutene.
 
 ## Sektorlista
 
@@ -165,6 +176,13 @@ Pignons, det eneste området brannen traff for alvor, havnet nest nederst.
 Velger man en sektor i kartet, åpner området sitt av seg selv, ellers ville
 raden vært markert uten å være synlig. Søk og alle andre sorteringer viser lista
 flat, uten områdeoverskrifter.
+
+Statusforklaringa står i høyre spalte på brede skjermer, men er sitt eget
+element i rutenettet — ikke en del av spalta. Når spaltene stables på smale
+skjermer, flytter den seg opp foran lista, rett under filterknappene, som bærer
+de samme fargene. Ellers ville forklaringa på fargene ligget etter alle 90
+radene. Plasseringa i rutenettet er derfor eksplisitt: lista spenner over begge
+radene, og et nytt element uten plassering havner et tilfeldig sted.
 
 ## Endringslogg
 

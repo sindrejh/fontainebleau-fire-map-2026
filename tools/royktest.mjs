@@ -24,7 +24,7 @@ const t = async (navn, fn) => {
 const nbsp = s => s.replace(/[  ]/g, ' ');
 
 async function nySide(opts = {}) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const page = await browser.newPage({ viewport: opts.vp || { width: 1280, height: 900 } });
   const feil = [];
   // Kartflisene er de eneste eksterne kallene, og de blokkeres med vilje under.
   const venta = /ERR_FAILED|ERR_BLOCKED|net::ERR/;
@@ -51,7 +51,8 @@ const SPRAAK = {
     klRen: 'Ingen av 2 339 blokker brent',
     ess: 'Ligger i Essonne.', nemours: 'Forêt communale de Nemours',
     ikkeher: 'gjelder ikke her', uavklart: 'Uavklart', stengtTag: 'Stengt',
-    full: 'Fullskjerm', fullAv: 'Avslutt fullskjerm',
+    full: 'Fullskjerm', fullAv: 'Avslutt fullskjerm', forklaring: 'Tegnforklaring',
+    forkBolk: 'Brannflate', forkStatus: 'Uberørt, men stengt',
   },
   en: {
     h1: 'What the fire actually took.', nav: 'MAP',
@@ -64,7 +65,8 @@ const SPRAAK = {
     klRen: 'None of 2,339 boulders burned',
     ess: 'Lies in the Essonne.', nemours: 'Forêt communale de Nemours',
     ikkeher: 'does not apply here', uavklart: 'Unresolved', stengtTag: 'Closed',
-    full: 'Full screen', fullAv: 'Exit full screen',
+    full: 'Full screen', fullAv: 'Exit full screen', forklaring: 'Legend',
+    forkBolk: 'Burn perimeter', forkStatus: 'Untouched, but closed',
   },
 };
 
@@ -106,6 +108,12 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   await t('menyen er oversatt', async () => (await page.locator('#nav a').first().innerText()) === F.nav);
   await t('90 rader i sektorlista', async () => (await page.locator('.row').count()) === 90 ? '90' : false);
   await t('faktakort fylt', async () => (await page.locator('.facts dd').count()) === 4);
+  /* Hver rad i «Flatene i kartet» må ha nøkkelen sin. Prikkene tegnes av
+     `i`-elementer, og uten dem står raden med tom rute foran teksten. */
+  await t('alle fire flateforklaringene har nøkkel', async () =>
+    (await page.locator('.shp').count()) === 4 &&
+    (await page.locator('.shp .k.dot i').count()) === 1 &&
+    (await page.locator('.shp .k.stein i').count()) === 2);
   await t('ingen 923-rest', async () => !(await page.locator('body').innerText()).includes('923'));
   await t('metodeteksten nevner Diplodocus', async () => {
     await page.locator('#metode summary').click();
@@ -261,6 +269,10 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   const knapp = page.locator('#fskjerm');
   await t('knappen tilbyr fullskjerm', async () =>
     (await knapp.innerText()).toUpperCase() === F.full.toUpperCase());
+  /* Utenfor fullskjerm står tegnforklaringa allerede på sida. Da har knappen
+     ingenting å tilby, og skal ikke stå der. */
+  await t('tegnforklaringsknappen er skjult utenfor fullskjerm', async () =>
+    !(await page.locator('#forkknapp').isVisible()));
   await t('kartet fyller vinduet', async () => {
     await knapp.click(); await page.waitForTimeout(500);
     const b = await page.locator('#map').boundingBox();
@@ -277,6 +289,32 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
       p.x >= m.x - 1 && p.y >= m.y - 1 &&
       p.x + p.width <= m.x + m.width + 1 && p.y + p.height <= m.y + m.height + 1;
   });
+  await t('knappen henter tegnforklaringa opp oppå kartet', async () => {
+    await page.locator('#forkknapp').click(); await page.waitForTimeout(300);
+    const f = page.locator('#forklaring');
+    if ((await page.locator('#forkknapp').getAttribute('aria-expanded')) !== 'true') return false;
+    const s = await f.innerText();
+    const b = await f.boundingBox(), m = await page.locator('#map').boundingBox();
+    return (await f.isVisible()) && s.includes(F.forkBolk) && s.includes(F.forkStatus) &&
+      b.x >= m.x - 1 && b.y >= m.y - 1 &&
+      b.x + b.width <= m.x + m.width + 1 && b.y + b.height <= m.y + m.height + 1;
+  });
+  /* Rutene deler plass. Sto begge framme samtidig, ville de ligget oppå hverandre. */
+  await t('infoboksen viker mens forklaringa står framme', async () =>
+    !(await page.locator('#pickwrap').isVisible()));
+  await t('Escape lukker forklaringa før den lukker fullskjerm', async () => {
+    await page.keyboard.press('Escape'); await page.waitForTimeout(400);
+    return !(await page.locator('#forklaring').isVisible()) &&
+      (await page.locator('.sheet.full').count()) === 1 &&
+      (await page.locator('#pickwrap').isVisible());
+  });
+  await t('lukkeknappen i forklaringa har navn og virker', async () => {
+    await page.locator('#forkknapp').click(); await page.waitForTimeout(300);
+    if (!(await page.locator('#fclose').getAttribute('aria-label'))) return false;
+    await page.locator('#fclose').click(); await page.waitForTimeout(300);
+    return !(await page.locator('#forklaring').isVisible()) &&
+      (await page.locator('#forkknapp').getAttribute('aria-expanded')) === 'false';
+  });
   await t('lukkeknappen har navn og skjuler boksen', async () => {
     if (!(await page.locator('#pclose').getAttribute('aria-label'))) return false;
     await page.locator('#pclose').click(); await page.waitForTimeout(250);
@@ -288,6 +326,19 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     const p = await page.locator('#pickwrap').boundingBox(), m = await page.locator('#map').boundingBox();
     return (await page.locator('#pickwrap').isVisible()) && p.y >= m.y + m.height - 1;
   });
+  /* Forklaringa er lånt fra sida, ikke kopiert. Blir den liggende igjen i ruta,
+     mangler sida si egen tegnforklaring etterpå. */
+  await t('tegnforklaringa er tilbake på plass i sida', async () =>
+    await page.evaluate(() => {
+      const rute = document.getElementById('forklaring');
+      return !document.getElementById('forkinn').children.length &&
+        !!document.getElementById('legend').closest('.statusboks') &&
+        !!document.getElementById('shapelegend').closest('.liste') &&
+        ['hflater', 'shapelegend', 'status', 'legend'].every(id => {
+          const n = document.getElementById(id);
+          return n && !rute.contains(n) && n.offsetParent !== null;
+        });
+    }));
 
   console.log('— feil i konsollen —');
   if (feil.length) { console.log(feil.map(f => '  ' + f).join('\n')); ok = false; }
@@ -337,6 +388,25 @@ for (const lang of Object.keys(SPRAAK)) {
     await page.mouse.click(p.x, p.y); await page.waitForTimeout(900);
     return (await page.locator('#pickwrap').isVisible()) &&
            (await page.locator('.pname').innerText()) === p.n ? p.n : false;
+  });
+  if (feil.length) { console.log(feil.map(f => '  ' + f).join('\n')); ok = false; }
+  await page.close();
+}
+
+/* Stablet ville statusforklaringa havnet etter alle 90 radene. Da står fargene
+   i kartet og i filterknappene uforklart til man har rullet forbi hele lista. */
+console.log('\n══ smal skjerm ══');
+for (const lang of Object.keys(SPRAAK)) {
+  const { page, feil } = await nySide({ q: '?lang=' + lang, vp: { width: 390, height: 780 } });
+  await t(`statusforklaringa står foran sektorlista (${lang})`, async () => {
+    const f = await page.locator('#filters').boundingBox();
+    const s = await page.locator('#legend').boundingBox();
+    const r = await page.locator('#rows').boundingBox();
+    return s.y > f.y && s.y + s.height <= r.y ? Math.round(s.y) + ' < ' + Math.round(r.y) : false;
+  });
+  await t(`endringsloggen står fortsatt etter lista (${lang})`, async () => {
+    const r = await page.locator('#rows').boundingBox();
+    return (await page.locator('#logg').boundingBox()).y > r.y;
   });
   if (feil.length) { console.log(feil.map(f => '  ' + f).join('\n')); ok = false; }
   await page.close();
