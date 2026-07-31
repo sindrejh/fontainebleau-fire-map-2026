@@ -41,10 +41,14 @@ ikke har funnet noe nytt. Finner du hjemmelen, er statusen ikke lenger uavklart.
 sto en gang tre steder med tre ulike verdier samtidig. Skal du skrive et tall i
 en setning, hent det fra `META` — og mangler feltet, legg det til i `beregn.py`.
 
-**Infoboksen i fullskjerm er detaljpanelet, flyttet.** Det er samme element,
-fylt av `visPicked()`, plassert oppå kartet av CSS. Skriver du sektorteksten en
-gang til — i en Leaflet-popup eller en egen boks — har sida to steder som må
-holdes i takt, og det er samme feil som tallene i prosaen var.
+**Rutene i fullskjerm er sidas egne elementer, flyttet.** Infoboksen er
+detaljpanelet, fylt av `visPicked()` og plassert oppå kartet av CSS.
+Tegnforklaringa er `#hflater`, `#shapelegend`, `#status` og `#legend`, lånt fra
+sida og satt tilbake på plass når fullskjerm avsluttes — kommentarnodene i
+`flyttForklaring()` holder plassen imens. Skriver du teksten en gang til — i en
+Leaflet-popup eller en egen boks — har sida to steder som må holdes i takt, og
+det er samme feil som tallene i prosaen var. Lånet må også leveres tilbake:
+blir elementene stående i ruta, mangler sida si egen tegnforklaring etterpå.
 
 **Alt som vises, må finnes på begge språk.** Ny UI-tekst i begge grenene av
 `tekster()`; nye data-strenger med `_en`-felt ved siden av. Tall og datoer

@@ -113,20 +113,22 @@ select{font:400 13px/1 var(--mono);padding:6px 8px;border:1px solid var(--gres2)
 .fs[hidden]{display:none}
 
 /* ---------- kartet i fullskjerm ----------
-   Detaljpanelet står under kartet, og der er det utenfor synsfeltet så snart
-   kartet fyller skjermen. I fullskjerm flyttes det samme elementet opp som en
-   infoboks oppå kartet — ingen kopi av teksten, bare en annen plassering. */
+   Detaljpanelet og tegnforklaringa står under kartet, og der er de utenfor
+   synsfeltet så snart kartet fyller skjermen. I fullskjerm flyttes de samme
+   elementene opp som ruter oppå kartet — ingen kopi av teksten, bare en annen
+   plassering. Rutene deler plass, og bare én står framme om gangen: på telefon
+   er det ikke rom for to, og på skjerm ville de dekket hver sin del av kartet. */
 html.kartfull,html.kartfull body{overflow:hidden}
 .sheet.full{position:fixed;inset:0;z-index:1300;/* over toppstripa, som ligger på 1200 */
   margin:0;border-radius:0;display:flex;flex-direction:column;overflow:hidden}
 .sheet.full .mapbox{position:relative;flex:1 1 auto;min-height:0;display:flex}
 .sheet.full #map{flex:1 1 auto;height:auto;min-height:0}
-.sheet.full .pickwrap{position:absolute;top:10px;left:10px;z-index:1100;/* over Leafletkontrollene */
+.sheet.full .kartrute{position:absolute;top:10px;left:10px;z-index:1100;/* over Leafletkontrollene */
   width:min(370px,calc(100% - 20px));max-height:calc(100% - 20px);display:flex;flex-direction:column;
   background:var(--gres);border:1px solid #BEB6A2;box-shadow:0 8px 28px rgba(20,17,14,.42)}
-/* Boksen skjules med klasse, ikke med hidden: display:flex over ville slått
+/* Rutene skjules med klasse, ikke med hidden: display:flex over ville slått
    nettleserens egen regel for skjulte elementer, og en tom boks blitt stående. */
-.sheet.full .pickwrap.skjult{display:none}
+.sheet.full .kartrute.skjult{display:none}
 .sheet.full .picked{border-top:0;padding:18px 18px 20px;min-height:0;overflow:auto}
 .sheet.full .pname{padding-right:32px}
 .sheet.full .pcols{grid-template-columns:1fr;gap:14px}
@@ -136,9 +138,21 @@ html.kartfull,html.kartfull body{overflow:hidden}
   font:400 17px/1 var(--body);cursor:pointer}
 .pclose:hover{color:var(--braise);border-color:var(--braise)}
 .pclose:focus-visible{outline:2px solid var(--braise);outline-offset:2px}
+
+/* Tegnforklaringa er skrevet for den mørke sida — fargene på tekstene ligger
+   i markupen. Ruta er derfor mørk, ikke lys som detaljpanelet. */
+.forklaring{display:none}
+.tf{display:none}
+.sheet.full .tf{display:block}
+.sheet.full .forklaring{display:flex;background:var(--soot);border-color:var(--soot3)}
+.sheet.full .forkinn{padding:16px 18px 4px;overflow:auto}
+.sheet.full .forklaring .sec-h{padding-right:34px}
+.sheet.full .forklaring .shapes{margin-bottom:22px}
+.sheet.full .forklaring .pclose{background:var(--soot2);border-color:var(--soot3);color:var(--craie)}
+.sheet.full .forklaring .pclose:hover{color:var(--braise);border-color:var(--braise)}
 @media(max-width:700px){
   .sheet.full .sheet-top{padding:8px 10px}
-  .sheet.full .pickwrap{top:auto;bottom:10px;left:10px;right:10px;width:auto;max-height:50%}
+  .sheet.full .kartrute{top:auto;bottom:10px;left:10px;right:10px;width:auto;max-height:50%}
 }
 
 /* ---------- valgt sektor ---------- */
@@ -347,17 +361,24 @@ footer a{color:var(--ash);text-decoration:underline;text-underline-offset:2px}
       <label for="prov" id="provlab"></label>
       <select id="prov"></select>
       <span id="tilestate" role="status"></span>
+      <button class="fs tf" id="forkknapp" type="button" aria-expanded="false" aria-controls="forklaring"></button>
       <button class="fs" id="fskjerm" type="button" aria-pressed="false"></button>
     </div>
-    <!-- Kartet og detaljpanelet ligger i samme boks, slik at panelet kan legge
-         seg oppå kartet når kartet fyller skjermen. -->
+    <!-- Kartet, detaljpanelet og tegnforklaringa ligger i samme boks, slik at
+         rutene kan legge seg oppå kartet når kartet fyller skjermen. -->
     <div class="mapbox">
       <div id="map" role="region"></div>
-      <div class="pickwrap" id="pickwrap">
+      <div class="pickwrap kartrute" id="pickwrap">
         <button class="pclose" id="pclose" type="button"><span aria-hidden="true">×</span></button>
         <div class="picked" id="picked" tabindex="-1" aria-live="polite">
           <p class="empty"></p>
         </div>
+      </div>
+      <!-- Tegnforklaringa står under kartet. I fullskjerm flyttes de samme
+           elementene hit, og tilbake dit igjen etterpå. -->
+      <div class="forklaring kartrute skjult" id="forklaring" tabindex="-1">
+        <button class="pclose" id="fclose" type="button"><span aria-hidden="true">×</span></button>
+        <div class="forkinn" id="forkinn"></div>
       </div>
     </div>
   </div>
@@ -366,7 +387,7 @@ footer a{color:var(--ash);text-decoration:underline;text-underline-offset:2px}
 
   <div class="grid">
     <div>
-      <h2 class="sec-h">Flatene i kartet</h2>
+      <h2 class="sec-h" id="hflater">Flatene i kartet</h2>
       <div class="shapes" id="shapelegend"></div>
       <h2 class="sec-h" id="sektorer"></h2>
       <p class="sec-note" id="secnote"></p>
@@ -499,6 +520,7 @@ function tekster(){
   kobler:'Kobler til…', prover:p=>'Prøver '+p+'…', svarer:p=>p+' svarer ikke — velg en annen',
   tomvalg:'Velg en sektor i kartet eller i tabellen under, så kommer detaljene hit.',
   fullPaa:'Fullskjerm', fullAv:'Avslutt fullskjerm', lukkInfo:'Lukk infoboksen',
+  forklaring:'Tegnforklaring', lukkForklaring:'Lukk tegnforklaringen',
   hFlater:'Flatene i kartet', hAlle:'Alle '+M.n_total+' sektorer', hStatus:'Status',
   hLogg:'Endringslogg', hMetode:'Hva tallene bygger på', hKilder:'Kilder',
   loggnote:'Hva som er dokumentert om brannen, forbudet og denne sida. Oppføringene sier bare det kildene faktisk viser.',
@@ -586,6 +608,7 @@ function tekster(){
   kobler:'Connecting…', prover:p=>'Trying '+p+'…', svarer:p=>p+' is not responding — pick another',
   tomvalg:'Pick a sector on the map or in the table below, and the details appear here.',
   fullPaa:'Full screen', fullAv:'Exit full screen', lukkInfo:'Close the info box',
+  forklaring:'Legend', lukkForklaring:'Close the legend',
   hFlater:'What the map shows', hAlle:'All '+M.n_total+' sectors', hStatus:'Status',
   hLogg:'Changelog', hMetode:'What the figures rest on', hKilder:'Sources',
   loggnote:'What is documented about the fire, the ban and this page. Each entry states only what the sources actually show.',
@@ -703,6 +726,8 @@ function tegnTekst(){
     trenger språkbyttet ikke vite om kartet står i fullskjerm. */
  const fk=el('fskjerm');fk.textContent=fk.getAttribute('aria-pressed')==='true'?T.fullAv:T.fullPaa;
  const lukk=el('pclose');lukk.setAttribute('aria-label',T.lukkInfo);lukk.title=T.lukkInfo;
+ el('forkknapp').textContent=T.forklaring;
+ const lukkf=el('fclose');lukkf.setAttribute('aria-label',T.lukkForklaring);lukkf.title=T.lukkForklaring;
  el('picked').querySelector('.empty')&&(el('picked').querySelector('.empty').textContent=T.tomvalg);
 
  el('sektorer').textContent=T.hAlle;
@@ -712,7 +737,9 @@ function tegnTekst(){
  el('loggnote').textContent=T.loggnote;
  el('metode-s').textContent=T.hMetode;
  el('kilder-s').textContent=T.hKilder;
- document.querySelector('.grid .sec-h').textContent=T.hFlater;
+ /* Ikke `.grid .sec-h`: overskrifta står i tegnforklaringsruta når kartet er i
+    fullskjerm, og et posisjonssøk ville da truffet overskrifta for sektorlista. */
+ el('hflater').textContent=T.hFlater;
 
  const q=el('q');q.placeholder=T.sok;q.setAttribute('aria-label',T.sok);
  el('sortlab').textContent=T.sorter;
@@ -865,15 +892,49 @@ if(typeof L==="undefined"){
  L.control.scale({imperial:false}).addTo(map);
 
  const picked=el('picked'),pickwrap=el('pickwrap'),sheet=el('kart'),fsKnapp=el('fskjerm');
- let cur=-1,fullskjerm=false,infoLukket=false;
+ const forkRute=el('forklaring'),forkInn=el('forkinn'),forkKnapp=el('forkknapp');
+ let cur=-1,fullskjerm=false,infoLukket=false,forkAapen=false;
 
  /* ---- fullskjerm ----
     Panelet med detaljene ligger under kartet. Fyller kartet skjermen, er
     panelet utenfor synsfeltet, og et sektorvalg ser ut til å svare med
     ingenting. I fullskjerm står derfor det samme elementet oppå kartet. */
  function oppdaterInfoboks(){
-  pickwrap.classList.toggle('skjult',fullskjerm&&(cur<0||infoLukket));
+  /* Bare én rute om gangen: står tegnforklaringa framme, viker detaljene. */
+  pickwrap.classList.toggle('skjult',fullskjerm&&(cur<0||infoLukket||forkAapen));
+  forkRute.classList.toggle('skjult',!(fullskjerm&&forkAapen));
  }
+
+ /* Tegnforklaringa finnes allerede på sida, i to bolker med hver sin overskrift.
+    De samme elementene flyttes inn i ruta og tilbake igjen etterpå — en kopi
+    ville vært to steder å holde i takt, akkurat som detaljpanelet. */
+ const FORK=['hflater','shapelegend','status','legend'].map(el);
+ const forkPlass=new Map();
+ function flyttForklaring(inn){
+  FORK.forEach(n=>{
+   if(inn){
+    if(forkPlass.has(n))return;
+    /* Kommentaren holder plassen i sida, så elementet finner tilbake dit det
+       sto — uansett hvilke av naboene som også er flyttet. */
+    const merke=document.createComment('tegnforklaring');
+    n.parentNode.insertBefore(merke,n);forkPlass.set(n,merke);forkInn.appendChild(n);
+   }else{
+    const merke=forkPlass.get(n); if(!merke)return;
+    merke.parentNode.insertBefore(n,merke);merke.remove();forkPlass.delete(n);
+   }});
+ }
+ /* Fokus følger bare med når leseren selv slo ruta av eller på. Lukkes den fordi
+    noe annet skjedde, skal ikke markøren rykke bort fra det de holdt på med. */
+ function settForklaring(paa,fokus){
+  if(paa===forkAapen)return;
+  forkAapen=paa;
+  forkKnapp.setAttribute('aria-expanded',String(paa));
+  flyttForklaring(paa);
+  oppdaterInfoboks();
+  if(fokus)(paa?forkRute:forkKnapp).focus();
+ }
+ forkKnapp.addEventListener('click',()=>settForklaring(!forkAapen,true));
+ el('fclose').addEventListener('click',()=>settForklaring(false,true));
  /* Den delen av kartet infoboksen ikke dekker. Uten dette rammes sektoren inn
     midt på kartflata, altså bak boksen — boksen står til venstre på brede
     skjermer og nederst på smale. */
@@ -886,6 +947,9 @@ if(typeof L==="undefined"){
  }
  function settFull(paa){
   if(paa===fullskjerm)return;
+  /* Ut av fullskjerm må tegnforklaringa tilbake i sida før ruta forsvinner,
+     ellers blir den stående i et element ingen ser. */
+  if(!paa)settForklaring(false,false);
   fullskjerm=paa;infoLukket=false;
   sheet.classList.toggle('full',paa);
   document.documentElement.classList.toggle('kartfull',paa);
@@ -915,8 +979,13 @@ if(typeof L==="undefined"){
  /* Nettleserens egen vei ut — Escape eller systemknappen — går utenom knappen vår. */
  ['fullscreenchange','webkitfullscreenchange'].forEach(n=>document.addEventListener(n,()=>{
   if(!(document.fullscreenElement||document.webkitFullscreenElement))settFull(false);}));
- /* Escape må virke også når nettleseren aldri gikk i ekte fullskjerm. */
- document.addEventListener('keydown',e=>{if(e.key==='Escape'&&fullskjerm){settFull(false);ekteFull(false);}});
+ /* Escape må virke også når nettleseren aldri gikk i ekte fullskjerm. Står en
+    rute framme, lukker den først — å ryke rett ut av fullskjerm er mer enn
+    leseren ba om. */
+ document.addEventListener('keydown',e=>{
+  if(e.key!=='Escape'||!fullskjerm)return;
+  if(forkAapen){settForklaring(false,true);return;}
+  settFull(false);ekteFull(false);});
  el('pclose').addEventListener('click',()=>{infoLukket=true;oppdaterInfoboks();fsKnapp.focus();});
 
  function visPicked(i){
@@ -966,8 +1035,9 @@ if(typeof L==="undefined"){
   /* Innholdet på plass før kartet rammes inn: i fullskjerm avgjør størrelsen på
      infoboksen hvor mye av kartflata som faktisk er ledig. */
   visPicked(i);
-  /* Et nytt valg åpner infoboksen igjen, også om leseren lukket den forrige. */
-  infoLukket=false;oppdaterInfoboks();
+  /* Et nytt valg åpner infoboksen igjen, også om leseren lukket den forrige,
+     og tegnforklaringa viker — det er detaljene som ble bedt om nå. */
+  infoLukket=false;settForklaring(false,false);oppdaterInfoboks();
 
   /* Rammer sektoren i stedet for å sette fast zoom: da er blokkprikkene store nok
      til å skilles fra hverandre, uansett hvor liten eller stor sektoren er. */
