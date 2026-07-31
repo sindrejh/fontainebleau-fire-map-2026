@@ -51,6 +51,7 @@ const SPRAAK = {
     klRen: 'Ingen av 2 339 blokker brent',
     ess: 'Ligger i Essonne.', nemours: 'Forêt communale de Nemours',
     ikkeher: 'gjelder ikke her', uavklart: 'Uavklart', stengtTag: 'Stengt',
+    full: 'Fullskjerm', fullAv: 'Avslutt fullskjerm',
   },
   en: {
     h1: 'What the fire actually took.', nav: 'MAP',
@@ -63,8 +64,26 @@ const SPRAAK = {
     klRen: 'None of 2,339 boulders burned',
     ess: 'Lies in the Essonne.', nemours: 'Forêt communale de Nemours',
     ikkeher: 'does not apply here', uavklart: 'Unresolved', stengtTag: 'Closed',
+    full: 'Full screen', fullAv: 'Exit full screen',
   },
 };
+
+/* Finner en sektorprikk det går an å treffe i kartet: godt innenfor kartflata og
+   minst 40 piksler fra nabosektorene, så selectNear ikke kan velge en annen. */
+async function trefflig(page) {
+  return await page.evaluate(() => {
+    const m = document.getElementById('map').getBoundingClientRect(), z = 12;
+    const c = L.CRS.EPSG3857.latLngToPoint(L.latLng(48.385, 2.585), z);
+    const pkt = SECTORS.map(s => {
+      const p = L.CRS.EPSG3857.latLngToPoint(L.latLng(s.lat, s.lon), z);
+      return { n: s.n, x: m.left + m.width / 2 + (p.x - c.x), y: m.top + m.height / 2 + (p.y - c.y) };
+    });
+    const inni = pkt.filter(p => p.x > m.left + 60 && p.x < m.right - 60 &&
+                                 p.y > m.top + 60 && p.y < m.bottom - 60);
+    return inni.find(p => pkt.every(q =>
+      q.n === p.n || Math.hypot(q.x - p.x, q.y - p.y) > 40)) || null;
+  });
+}
 
 /* Åpne alle / lukk alle, med knappeteksten som skifter. */
 async function t2sjekk(page, F) {
@@ -236,6 +255,40 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   await t('språkknappen har navn', async () =>
     await page.evaluate(() => !!document.getElementById('lang').getAttribute('aria-label')));
 
+  /* I fullskjerm ligger detaljpanelet utenfor synsfeltet. Kommer ikke innholdet
+     opp oppå kartet, ser et sektorvalg ut til å svare med ingenting. */
+  console.log('— fullskjerm —');
+  const knapp = page.locator('#fskjerm');
+  await t('knappen tilbyr fullskjerm', async () =>
+    (await knapp.innerText()).toUpperCase() === F.full.toUpperCase());
+  await t('kartet fyller vinduet', async () => {
+    await knapp.click(); await page.waitForTimeout(500);
+    const b = await page.locator('#map').boundingBox();
+    const h = await page.evaluate(() => innerHeight);
+    return (await page.locator('.sheet.full').count()) === 1 && b.height > h * 0.85
+      ? Math.round(b.height) + ' av ' + h + ' px' : false;
+  });
+  await t('knappen sier hvordan man kommer ut igjen', async () =>
+    (await knapp.innerText()).toUpperCase() === F.fullAv.toUpperCase() &&
+    (await knapp.getAttribute('aria-pressed')) === 'true');
+  await t('infoboksen ligger oppå kartet', async () => {
+    const p = await page.locator('#pickwrap').boundingBox(), m = await page.locator('#map').boundingBox();
+    return (await page.locator('.pname').isVisible()) &&
+      p.x >= m.x - 1 && p.y >= m.y - 1 &&
+      p.x + p.width <= m.x + m.width + 1 && p.y + p.height <= m.y + m.height + 1;
+  });
+  await t('lukkeknappen har navn og skjuler boksen', async () => {
+    if (!(await page.locator('#pclose').getAttribute('aria-label'))) return false;
+    await page.locator('#pclose').click(); await page.waitForTimeout(250);
+    return !(await page.locator('#pickwrap').isVisible());
+  });
+  await t('Escape avslutter, og panelet står igjen under kartet', async () => {
+    await page.keyboard.press('Escape'); await page.waitForTimeout(500);
+    if (await page.locator('.sheet.full').count()) return false;
+    const p = await page.locator('#pickwrap').boundingBox(), m = await page.locator('#map').boundingBox();
+    return (await page.locator('#pickwrap').isVisible()) && p.y >= m.y + m.height - 1;
+  });
+
   console.log('— feil i konsollen —');
   if (feil.length) { console.log(feil.map(f => '  ' + f).join('\n')); ok = false; }
   else console.log('  ingen');
@@ -263,6 +316,27 @@ console.log('\n══ språkbytte ══');
   await t('valget huskes uten ?lang i adressa', async () => {
     await page.goto(base, { waitUntil: 'networkidle' });
     return (await page.evaluate(() => document.documentElement.lang)) === 'nb';
+  });
+  if (feil.length) { console.log(feil.map(f => '  ' + f).join('\n')); ok = false; }
+  await page.close();
+}
+
+/* Uten valgt sektor har infoboksen ingenting å si, og da skal den ikke dekke
+   kartet. Et trykk på en sektorprikk er det som henter den fram. */
+console.log('\n══ fullskjerm og trykk i kartet ══');
+for (const lang of Object.keys(SPRAAK)) {
+  const { page, feil } = await nySide({ q: '?lang=' + lang });
+  await t(`tom infoboks ligger ikke i veien (${lang})`, async () => {
+    await page.locator('#fskjerm').click(); await page.waitForTimeout(500);
+    return (await page.locator('.sheet.full').count()) === 1 &&
+           !(await page.locator('#pickwrap').isVisible());
+  });
+  await t(`trykk på en sektor i kartet henter den fram (${lang})`, async () => {
+    const p = await trefflig(page);
+    if (!p) throw new Error('fant ingen sektorprikk som ligger alene');
+    await page.mouse.click(p.x, p.y); await page.waitForTimeout(900);
+    return (await page.locator('#pickwrap').isVisible()) &&
+           (await page.locator('.pname').innerText()) === p.n ? p.n : false;
   });
   if (feil.length) { console.log(feil.map(f => '  ' + f).join('\n')); ok = false; }
   await page.close();

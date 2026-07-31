@@ -41,6 +41,11 @@ ikke har funnet noe nytt. Finner du hjemmelen, er statusen ikke lenger uavklart.
 sto en gang tre steder med tre ulike verdier samtidig. Skal du skrive et tall i
 en setning, hent det fra `META` — og mangler feltet, legg det til i `beregn.py`.
 
+**Infoboksen i fullskjerm er detaljpanelet, flyttet.** Det er samme element,
+fylt av `visPicked()`, plassert oppå kartet av CSS. Skriver du sektorteksten en
+gang til — i en Leaflet-popup eller en egen boks — har sida to steder som må
+holdes i takt, og det er samme feil som tallene i prosaen var.
+
 **Alt som vises, må finnes på begge språk.** Ny UI-tekst i begge grenene av
 `tekster()`; nye data-strenger med `_en`-felt ved siden av. Tall og datoer
 formateres av `tall()`, `pc()` og `dato()` — ikke skriv dem ut direkte.

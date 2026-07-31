@@ -134,6 +134,23 @@ Skriptet skriver ingenting. Det rapporterer, og så avgjør et menneske — en s
 kan ligge i skogen uten å være omfattet, eller være stengt av en grunn ingen
 polygon kjenner til.
 
+## Kartet i fullskjerm
+
+Knappen over kartet lar kartet fylle skjermen. Der nettleseren tillater det,
+brukes fullskjerm-API-et; ellers legger sida seg over vinduet med CSS, slik at
+iOS Safari — som bare gir fullskjerm til video — oppfører seg likt. Escape
+avslutter i begge tilfeller.
+
+Detaljene om en sektor står i panelet under kartet, og det panelet er utenfor
+synsfeltet så snart kartet fyller skjermen. I fullskjerm flyttes derfor det
+samme elementet opp som en infoboks oppå kartet — én tekst og én kodevei, ikke
+en kopi. Boksen står til venstre på brede skjermer og nederst på smale, og et
+sektorvalg rammes inn i den delen av kartet boksen ikke dekker. Er ingen sektor
+valgt, eller lukker leseren boksen, ligger den ikke i veien.
+
+Zoomknappene flytter til høyre side i fullskjerm. Ellers ville de blitt liggende
+under infoboksen.
+
 ## Sektorlista
 
 Områdene (Boolders klynger) står sammenslåtte. 90 rader etter hverandre er mer
