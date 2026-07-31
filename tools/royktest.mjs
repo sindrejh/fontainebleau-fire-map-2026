@@ -262,6 +262,19 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     await page.evaluate(() => !!document.querySelector('.row').getAttribute('aria-label')));
   await t('språkknappen har navn', async () =>
     await page.evaluate(() => !!document.getElementById('lang').getAttribute('aria-label')));
+  await t('nedtrekkslista for bakgrunnskart har navn', async () =>
+    await page.evaluate(() => !!document.getElementById('prov').getAttribute('aria-label')));
+  /* Navnet på kartet står i nedtrekkslista. Står det ved prikken også, tar det
+     plass uten å si noe nytt — men skjermlesere må fortsatt få det. */
+  await t('valgt kart står ikke skrevet to steder', async () => {
+    await page.selectOption('#prov', 'none'); await page.waitForTimeout(250);
+    return await page.evaluate(() => {
+      const s = document.getElementById('tilestate');
+      const synlig = [...s.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim();
+      return !synlig && !!s.querySelector('.dotlive') &&
+        (s.querySelector('.sr')?.textContent || '').length > 3;
+    });
+  });
 
   /* I fullskjerm ligger detaljpanelet utenfor synsfeltet. Kommer ikke innholdet
      opp oppå kartet, ser et sektorvalg ut til å svare med ingenting. */
@@ -407,6 +420,20 @@ for (const lang of Object.keys(SPRAAK)) {
   await t(`endringsloggen står fortsatt etter lista (${lang})`, async () => {
     const r = await page.locator('#rows').boundingBox();
     return (await page.locator('#logg').boundingBox()).y > r.y;
+  });
+  /* Hver linje i toppstripa er kart man gikk i fullskjerm for å se. */
+  await t(`toppstripa er én linje i fullskjerm (${lang})`, async () => {
+    await page.locator('#fskjerm').click(); await page.waitForTimeout(600);
+    const h = Math.round((await page.locator('.sheet-top').boundingBox()).height);
+    const navn = await page.evaluate(() => ['forkknapp', 'fskjerm', 'prov'].every(id =>
+      (document.getElementById(id).getAttribute('aria-label') || '').length > 3));
+    return h < 60 && navn ? h + 'px' : false;
+  });
+  await t(`ikonknappene svarer på trykk (${lang})`, async () => {
+    await page.locator('#forkknapp').click(); await page.waitForTimeout(300);
+    const oppe = await page.locator('#forklaring').isVisible();
+    await page.locator('#fskjerm').click(); await page.waitForTimeout(500);
+    return oppe && !(await page.locator('.sheet.full').count());
   });
   if (feil.length) { console.log(feil.map(f => '  ' + f).join('\n')); ok = false; }
   await page.close();
