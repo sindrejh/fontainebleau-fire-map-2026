@@ -749,8 +749,12 @@ function tegnTekst(){
   '<div class="leg"><span class="sw" style="background:'+CAT[k].c+'"></span><span><b>'+ct(k)+'</b>'+cd(k)+'</span></div>').join('');
 
  const kl=['burn','forest','dot','stein'];
+ /* Flatene er nøkkelen sin egen bakgrunn, mens prikkene tegnes av `i`-er inni
+    den: én for sektorprikken, to for blokkene — en brent og en hel. Mangler
+    de, står raden uten nøkkel, og forklaringa forklarer ingenting. */
+ const nokkel={2:'<i></i>',3:'<i class="b"></i><i></i>'};
  el('shapelegend').innerHTML=T.shapes.map((s,i)=>
-  '<div class="shp"><span class="k '+kl[i]+'">'+(i===3?'<i class="b"></i><i></i>':'')+'</span>'+
+  '<div class="shp"><span class="k '+kl[i]+'">'+(nokkel[i]||'')+'</span>'+
   '<span style="font:400 12.5px/1.5 var(--body);color:var(--ash)">'+
   '<b style="display:block;color:var(--craie);font-weight:500;font-size:13px">'+s[0]+'</b>'+s[1]+'</span></div>').join('');
 

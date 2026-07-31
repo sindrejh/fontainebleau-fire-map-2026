@@ -108,6 +108,12 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   await t('menyen er oversatt', async () => (await page.locator('#nav a').first().innerText()) === F.nav);
   await t('90 rader i sektorlista', async () => (await page.locator('.row').count()) === 90 ? '90' : false);
   await t('faktakort fylt', async () => (await page.locator('.facts dd').count()) === 4);
+  /* Hver rad i «Flatene i kartet» må ha nøkkelen sin. Prikkene tegnes av
+     `i`-elementer, og uten dem står raden med tom rute foran teksten. */
+  await t('alle fire flateforklaringene har nøkkel', async () =>
+    (await page.locator('.shp').count()) === 4 &&
+    (await page.locator('.shp .k.dot i').count()) === 1 &&
+    (await page.locator('.shp .k.stein i').count()) === 2);
   await t('ingen 923-rest', async () => !(await page.locator('body').innerText()).includes('923'));
   await t('metodeteksten nevner Diplodocus', async () => {
     await page.locator('#metode summary').click();
