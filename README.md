@@ -167,8 +167,11 @@ for å se, og på norsk ble det tre av dem. Derfor står navnet på bakgrunnskar
 bare i nedtrekkslista: prikken ved siden av sier hvordan det går med det, og
 skriver bare tekst når den har noe å si ut over navnet — at sida prøver en
 leverandør, eller at den ikke svarer. Skjermlesere får teksten uansett, for en
-farge alene sier dem ingenting. På smale skjermer i fullskjerm faller etiketten
-foran lista bort, og knappene blir ikoner med navnet i `aria-label` og `title`.
+farge alene sier dem ingenting. På smale skjermer faller etiketten foran lista
+bort, og knappene blir ikoner med navnet i `aria-label` og `title`. Det skjer
+under 480 piksler i vanlig visning, og under 700 i fullskjerm, der stripa har en
+knapp til å få plass til. Fullskjermknappen har ett ikon som peker ut når man
+står utenfor, og inn når man er inne.
 
 ## Sektorlista
 

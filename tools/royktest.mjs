@@ -421,12 +421,27 @@ for (const lang of Object.keys(SPRAAK)) {
     const r = await page.locator('#rows').boundingBox();
     return (await page.locator('#logg').boundingBox()).y > r.y;
   });
-  /* Hver linje i toppstripa er kart man gikk i fullskjerm for å se. */
+  /* Hver linje i toppstripa er kart som ikke vises. */
+  await t(`toppstripa er én linje i vanlig visning (${lang})`, async () => {
+    const h = Math.round((await page.locator('.sheet-top').boundingBox()).height);
+    const kort = await page.evaluate(() => {
+      const v = n => getComputedStyle(n).display !== 'none', b = document.getElementById('fskjerm');
+      return !v(document.getElementById('provlab')) && !v(b.querySelector('.ord')) &&
+        v(b.querySelector('.ikon')) && v(b.querySelector('.inn')) && !v(b.querySelector('.ut')) &&
+        (b.getAttribute('aria-label') || '').length > 3;
+    });
+    return h < 60 && kort ? h + 'px' : false;
+  });
   await t(`toppstripa er én linje i fullskjerm (${lang})`, async () => {
     await page.locator('#fskjerm').click(); await page.waitForTimeout(600);
     const h = Math.round((await page.locator('.sheet-top').boundingBox()).height);
-    const navn = await page.evaluate(() => ['forkknapp', 'fskjerm', 'prov'].every(id =>
-      (document.getElementById(id).getAttribute('aria-label') || '').length > 3));
+    const navn = await page.evaluate(() => {
+      const v = n => getComputedStyle(n).display !== 'none', b = document.getElementById('fskjerm');
+      /* Ikonet skal nå peke ut av fullskjerm, ikke inn i den. */
+      return v(b.querySelector('.ut')) && !v(b.querySelector('.inn')) &&
+        ['forkknapp', 'fskjerm', 'prov'].every(id =>
+          (document.getElementById(id).getAttribute('aria-label') || '').length > 3);
+    });
     return h < 60 && navn ? h + 'px' : false;
   });
   await t(`ikonknappene svarer på trykk (${lang})`, async () => {
