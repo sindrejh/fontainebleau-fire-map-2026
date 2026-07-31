@@ -177,6 +177,13 @@ Velger man en sektor i kartet, åpner området sitt av seg selv, ellers ville
 raden vært markert uten å være synlig. Søk og alle andre sorteringer viser lista
 flat, uten områdeoverskrifter.
 
+Statusforklaringa står i høyre spalte på brede skjermer, men er sitt eget
+element i rutenettet — ikke en del av spalta. Når spaltene stables på smale
+skjermer, flytter den seg opp foran lista, rett under filterknappene, som bærer
+de samme fargene. Ellers ville forklaringa på fargene ligget etter alle 90
+radene. Plasseringa i rutenettet er derfor eksplisitt: lista spenner over begge
+radene, og et nytt element uten plassering havner et tilfeldig sted.
+
 ## Endringslogg
 
 `HISTORIKK` er tidslinja sida viser i høyre spalte, nyeste først. Hver oppføring

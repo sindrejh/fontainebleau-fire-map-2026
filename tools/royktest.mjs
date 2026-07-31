@@ -24,7 +24,7 @@ const t = async (navn, fn) => {
 const nbsp = s => s.replace(/[  ]/g, ' ');
 
 async function nySide(opts = {}) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  const page = await browser.newPage({ viewport: opts.vp || { width: 1280, height: 900 } });
   const feil = [];
   // Kartflisene er de eneste eksterne kallene, og de blokkeres med vilje under.
   const venta = /ERR_FAILED|ERR_BLOCKED|net::ERR/;
@@ -332,8 +332,8 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     await page.evaluate(() => {
       const rute = document.getElementById('forklaring');
       return !document.getElementById('forkinn').children.length &&
-        !!document.getElementById('legend').closest('aside') &&
-        !!document.getElementById('shapelegend').closest('.grid') &&
+        !!document.getElementById('legend').closest('.statusboks') &&
+        !!document.getElementById('shapelegend').closest('.liste') &&
         ['hflater', 'shapelegend', 'status', 'legend'].every(id => {
           const n = document.getElementById(id);
           return n && !rute.contains(n) && n.offsetParent !== null;
@@ -388,6 +388,25 @@ for (const lang of Object.keys(SPRAAK)) {
     await page.mouse.click(p.x, p.y); await page.waitForTimeout(900);
     return (await page.locator('#pickwrap').isVisible()) &&
            (await page.locator('.pname').innerText()) === p.n ? p.n : false;
+  });
+  if (feil.length) { console.log(feil.map(f => '  ' + f).join('\n')); ok = false; }
+  await page.close();
+}
+
+/* Stablet ville statusforklaringa havnet etter alle 90 radene. Da står fargene
+   i kartet og i filterknappene uforklart til man har rullet forbi hele lista. */
+console.log('\n══ smal skjerm ══');
+for (const lang of Object.keys(SPRAAK)) {
+  const { page, feil } = await nySide({ q: '?lang=' + lang, vp: { width: 390, height: 780 } });
+  await t(`statusforklaringa står foran sektorlista (${lang})`, async () => {
+    const f = await page.locator('#filters').boundingBox();
+    const s = await page.locator('#legend').boundingBox();
+    const r = await page.locator('#rows').boundingBox();
+    return s.y > f.y && s.y + s.height <= r.y ? Math.round(s.y) + ' < ' + Math.round(r.y) : false;
+  });
+  await t(`endringsloggen står fortsatt etter lista (${lang})`, async () => {
+    const r = await page.locator('#rows').boundingBox();
+    return (await page.locator('#logg').boundingBox()).y > r.y;
   });
   if (feil.length) { console.log(feil.map(f => '  ' + f).join('\n')); ok = false; }
   await page.close();

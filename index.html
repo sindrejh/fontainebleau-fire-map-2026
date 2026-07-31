@@ -186,8 +186,25 @@ html.kartfull,html.kartfull body{overflow:hidden}
 .chip:focus-visible{outline:2px solid var(--braise);outline-offset:2px}
 
 /* ---------- nedre rutenett ---------- */
-.grid{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,1fr);gap:42px;margin:52px 0 0}
-@media(max-width:940px){.grid{grid-template-columns:1fr;gap:34px}}
+.grid{display:grid;grid-template-columns:minmax(0,1.85fr) minmax(0,1fr);
+  grid-template-rows:auto 1fr;gap:42px;margin:52px 0 0}
+/* Plasseringa er eksplisitt fordi lista spenner over begge radene. Uten
+   `1fr` på rad to ville overskuddet fra lista blitt delt likt mellom radene,
+   og endringsloggen sklidd nedover i høyre spalte. */
+/* Bunnmargen på siste kategori faller ut av ruta og legger seg til avstanden
+   ned til det neste. Ruta skal slutte der innholdet slutter. */
+.statusboks .leg:last-child{margin-bottom:0}
+.grid>.liste{grid-column:1;grid-row:1/span 2}
+.grid>.statusboks{grid-column:2;grid-row:1}
+.grid>aside{grid-column:2;grid-row:2}
+@media(max-width:940px){
+  .grid{grid-template-columns:1fr;grid-template-rows:none;gap:34px}
+  .grid>.liste,.grid>.statusboks,.grid>aside{grid-column:auto;grid-row:auto}
+  /* Stablet havner statusforklaringa etter alle 90 radene, altså langt fra
+     fargene den forklarer. Da skal den opp foran lista — rett under
+     filterknappene, som bærer de samme fargene. */
+  .grid>.statusboks{order:-1}
+}
 .sec-h{font:500 10.5px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--ash2);
   margin:0 0 6px;padding-bottom:10px;border-bottom:1px solid var(--soot3)}
 .sec-note{font:400 13px/1.5 var(--body);color:var(--ash);margin:10px 0 16px}
@@ -386,7 +403,7 @@ footer a{color:var(--ash);text-decoration:underline;text-underline-offset:2px}
   <div class="filters" id="filters"></div>
 
   <div class="grid">
-    <div>
+    <div class="liste">
       <h2 class="sec-h" id="hflater">Flatene i kartet</h2>
       <div class="shapes" id="shapelegend"></div>
       <h2 class="sec-h" id="sektorer"></h2>
@@ -407,10 +424,15 @@ footer a{color:var(--ash);text-decoration:underline;text-underline-offset:2px}
       </div>
       <div id="rows"></div>
     </div>
-    <aside>
+    <!-- Statusforklaringa er sin egen rute i rutenettet, ikke en del av spalta
+         ved siden av. Stablet skal den opp foran sektorlista, og det går bare
+         an når den kan flytte seg for seg selv. -->
+    <section class="statusboks">
       <h2 class="sec-h" id="status"></h2>
       <div id="legend" style="margin-top:16px"></div>
-      <h2 class="sec-h" id="logg" style="margin-top:38px"></h2>
+    </section>
+    <aside>
+      <h2 class="sec-h" id="logg"></h2>
       <p class="sec-note" id="loggnote"></p>
       <ol class="tl" id="tl"></ol>
       <details id="metode">
