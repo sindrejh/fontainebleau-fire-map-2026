@@ -162,6 +162,14 @@ den avslutter fullskjerm.
 Zoomknappene flytter til høyre side i fullskjerm. Ellers ville de blitt liggende
 under rutene.
 
+Toppstripa skal være én linje. Hver ekstra linje er kart man gikk i fullskjerm
+for å se, og på norsk ble det tre av dem. Derfor står navnet på bakgrunnskartet
+bare i nedtrekkslista: prikken ved siden av sier hvordan det går med det, og
+skriver bare tekst når den har noe å si ut over navnet — at sida prøver en
+leverandør, eller at den ikke svarer. Skjermlesere får teksten uansett, for en
+farge alene sier dem ingenting. På smale skjermer i fullskjerm faller etiketten
+foran lista bort, og knappene blir ikoner med navnet i `aria-label` og `title`.
+
 ## Sektorlista
 
 Områdene (Boolders klynger) står sammenslåtte. 90 rader etter hverandre er mer
