@@ -45,7 +45,7 @@ const SPRAAK = {
     tall: ['926', '921', '23 613', '22 692', '2 104', '19 137', '76 atskilte'],
     panel: '153 av 475', gammelt: '56,3', pct: '32,2 %',
     metode: 'Hva tallene bygger på', knapp: 'EN',
-    tom: 'Ingen sektorer passer søket.', logg: 'Målet lagt om: faktiske blokker',
+    tom: 'Ingen sektorer passer søket.', logg: 'Rocher Gréau er ført som stengt, men hjemmelen mangler',
     alleKnapp: 'Åpne alle områder', alleLukk: 'Lukk alle områder',
     klSum: '1 877 av 5 935 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
     klRen: 'Ingen av 2 339 blokker brent',
@@ -59,7 +59,7 @@ const SPRAAK = {
     tall: ['926', '921', '23,613', '22,692', '2,104', '19,137', '76 separate'],
     panel: '153 of 475', gammelt: '56.3', pct: '32.2%',
     metode: 'What the figures rest on', knapp: 'NO',
-    tom: 'No sectors match that search.', logg: 'The measure changes: actual boulders',
+    tom: 'No sectors match that search.', logg: 'Rocher Gréau is listed as closed, with no order behind it',
     alleKnapp: 'Expand all areas', alleLukk: 'Collapse all areas',
     klSum: '1,877 of 5,935 boulders', klTally: 'All 90 sectors across 19 areas.',
     klRen: 'None of 2,339 boulders burned',
@@ -125,13 +125,13 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   for (const n of F.tall) await t(`«${n}» finnes`, () => kropp.includes(n));
 
   console.log('— endringsloggen —');
-  await t('tolv oppføringer', async () => (await page.locator('.tl li').count()) === 12 ? '12' : false);
+  await t('femten oppføringer', async () => (await page.locator('.tl li').count()) === 15 ? '15' : false);
   await t('nyeste står øverst', async () =>
     (await page.locator('.tl li').first().innerText()).includes(F.logg));
   await t('oppføringene lenker til kilder', async () =>
     (await page.locator('.tl .k').count()) >= 5);
   await t('datoene er maskinlesbare', async () =>
-    (await page.locator('.tl time[datetime]').count()) === 12);
+    (await page.locator('.tl time[datetime]').count()) === 15);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
 
@@ -210,8 +210,8 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
 
   /* Uavklart skal verken påstå åpen eller stengt. Ryker dette, har sida begynt
      å svare på et spørsmål den nettopp har sagt at den ikke kan svare på. */
-  await t('Beauvais er uavklart, uten «stengt»-merkelapp', async () => {
-    await page.fill('#q', 'Beauvais Hameau'); await page.waitForTimeout(250);
+  await t('Rocher Gréau er uavklart, uten «stengt»-merkelapp', async () => {
+    await page.fill('#q', 'Greau'); await page.waitForTimeout(250);
     await page.locator('.row').first().click(); await page.waitForTimeout(900);
     /* Merkelappene settes i versaler av CSS, og innerText gir dem sånn. */
     const tags = (await page.locator('.picked .tag').allInnerTexts()).map(s => s.toUpperCase());
