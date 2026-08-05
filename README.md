@@ -295,6 +295,13 @@ tallet, prikken i kartet og en eventuell etterregning stemmer overens.
 * 50 av de 90 sektorene ligger utenfor området Copernicus gjennomgikk. Alle
   ligger minst 2,22 km fra nærmeste kartlagte brannflate og er derfor ikke
   berørt av denne brannen.
+* ONF og pressen oppgir rundt 2 000 hektar, «omtrent 10 prosent av massivet».
+  Copernicus kartlegger 926. En del av forskjellen er at de offisielle tallene
+  måler arealet innenfor brannens ytre omkrets og ikke bare det som virkelig
+  brant, men to andre forhold trekker samme vei: analyseområdet dekker bare
+  10 290 hektar, og satellittbildet flaten er tegnet fra er tatt 19. juli, mens
+  brannene fortsatte til 24. Kommer det et nyere Copernicus-produkt enn Grading
+  Monit01, er det flaten som må byttes ut — ikke tallet i teksten.
 
 ## Forbehold
 
