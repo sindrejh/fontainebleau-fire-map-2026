@@ -300,8 +300,11 @@ tallet, prikken i kartet og en eventuell etterregning stemmer overens.
   måler arealet innenfor brannens ytre omkrets og ikke bare det som virkelig
   brant, men to andre forhold trekker samme vei: analyseområdet dekker bare
   10 290 hektar, og satellittbildet flaten er tegnet fra er tatt 19. juli, mens
-  brannene fortsatte til 24. Kommer det et nyere Copernicus-produkt enn Grading
-  Monit01, er det flaten som må byttes ut — ikke tallet i teksten.
+  statsforvalteren daterer brannene til 12.–24. juli og melder om oppblussinger
+  helt til 30. Aktiveringen EMSR894 er avsluttet uten noe produkt etter Grading
+  Monit01, så flaten står. Merk hva det betyr: den står fordi kartleggingen tok
+  slutt, ikke fordi noen har målt at det ikke brant mer. Hvor mye de siste
+  dagene la til, vet vi ikke.
 
 ## Forbehold
 
