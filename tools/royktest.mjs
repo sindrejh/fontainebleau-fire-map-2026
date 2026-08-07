@@ -45,7 +45,7 @@ const SPRAAK = {
     tall: ['926', '921', '23 613', '22 692', '2 104', '19 137', '76 atskilte'],
     panel: '153 av 475', gammelt: '56,3', pct: '32,2 %',
     metode: 'Hva tallene bygger på', knapp: 'EN',
-    tom: 'Ingen sektorer passer søket.', logg: 'Rocher Gréau er ført som stengt, men hjemmelen mangler',
+    tom: 'Ingen sektorer passer søket.', logg: 'Forbudet forlenget til 14. august',
     alleKnapp: 'Åpne alle områder', alleLukk: 'Lukk alle områder',
     klSum: '1 877 av 5 935 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
     klRen: 'Ingen av 2 339 blokker brent',
@@ -59,7 +59,7 @@ const SPRAAK = {
     tall: ['926', '921', '23,613', '22,692', '2,104', '19,137', '76 separate'],
     panel: '153 of 475', gammelt: '56.3', pct: '32.2%',
     metode: 'What the figures rest on', knapp: 'NO',
-    tom: 'No sectors match that search.', logg: 'Rocher Gréau is listed as closed, with no order behind it',
+    tom: 'No sectors match that search.', logg: 'The ban is extended to 14 August',
     alleKnapp: 'Expand all areas', alleLukk: 'Collapse all areas',
     klSum: '1,877 of 5,935 boulders', klTally: 'All 90 sectors across 19 areas.',
     klRen: 'None of 2,339 boulders burned',
@@ -125,13 +125,13 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   for (const n of F.tall) await t(`«${n}» finnes`, () => kropp.includes(n));
 
   console.log('— endringsloggen —');
-  await t('femten oppføringer', async () => (await page.locator('.tl li').count()) === 15 ? '15' : false);
+  await t('sytten oppføringer', async () => (await page.locator('.tl li').count()) === 17 ? '17' : false);
   await t('nyeste står øverst', async () =>
     (await page.locator('.tl li').first().innerText()).includes(F.logg));
   await t('oppføringene lenker til kilder', async () =>
     (await page.locator('.tl .k').count()) >= 5);
   await t('datoene er maskinlesbare', async () =>
-    (await page.locator('.tl time[datetime]').count()) === 15);
+    (await page.locator('.tl time[datetime]').count()) === 17);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
 
@@ -455,8 +455,10 @@ for (const lang of Object.keys(SPRAAK)) {
 }
 
 console.log('\n══ utløpt ferdselsforbud ══');
+// Klokka må stilles forbi META.ban_until, ellers er det ingenting å varsle om.
+// Blir forbudet forlenget igjen, må denne datoen flyttes med.
 for (const [lang, bit] of [['nb', 'Den datoen er passert'], ['en', 'That date has passed']]) {
-  const { page } = await nySide({ q: '?lang=' + lang, tid: '2026-08-10T09:00:00' });
+  const { page } = await nySide({ q: '?lang=' + lang, tid: '2026-08-20T09:00:00' });
   await t(`varselet vises på ${lang}`, async () =>
     (await page.locator('#warn').isVisible()) &&
     (await page.locator('#warn').innerText()).includes(bit));

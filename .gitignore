@@ -17,4 +17,7 @@ tmp/
 *.log
 *.geojson.bak
 boolder.db
+boolder-data/
 node_modules/
+package.json
+package-lock.json
