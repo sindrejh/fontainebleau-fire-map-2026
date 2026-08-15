@@ -255,7 +255,7 @@ varselet om utløpt ferdselsforbud dukker opp når datoen er passert.
 | Skoggrenser | [ONF OpenData](https://geo-onf.opendata.arcgis.com/), offentlige skoger i fastlands-Frankrike | Åpne data |
 | Sektorer og blokker | [Boolder](https://github.com/boolder-org/boolder-data) | CC BY 4.0 |
 | Åpen/stengt | [CrashPad Tours](https://crashpadtours.fr/fontainebleau-incendie-secteurs-ouverts/) | — |
-| Ferdselsforbud, Seine-et-Marne | Arrêtés 2026/CAB/SIDPC/1265 og 1266 av 29.07.2026 | Offentlig vedtak |
+| Ferdselsforbud, Seine-et-Marne | Arrêtés 2026/CAB/SIDPC/1300 og 1301 av 06.08.2026 | Offentlig vedtak |
 | Ferdselsforbud, Essonne | Arrêtés 2026-DDT-SEAF av 07.07.2026 og 2026-PREF-DCSIPC-SIDPC-1244 av 27.07.2026 | Offentlig vedtak |
 | Bakgrunnskart | OpenStreetMap, CARTO, Esri | Se attribusjon i kartet |
 
