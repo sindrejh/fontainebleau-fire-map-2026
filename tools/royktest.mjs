@@ -228,6 +228,18 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     const tags = (await page.locator('.picked .tag').allInnerTexts()).map(s => s.toUpperCase());
     return tags.includes(F.stengtTag.toUpperCase()) && !tags.includes(F.uavklart.toUpperCase());
   });
+  /* CAT-teksten for «naer» sier at sektorene ligger i sona som fortsatt er
+     stengt. Den påstanden hviler på at en brannkategori og «open» utelukker
+     hverandre — så en «naer»-sektor må vises med stengt-merkelappen. Ryker
+     dette, har kategorien og teksten om den kommet ut av takt. */
+  await t('«naer»-sektor vises som stengt', async () => {
+    const n = await page.evaluate(() => (SECTORS.find(x => x.s === 'naer') || {}).n);
+    if (!n) return false;
+    await page.fill('#q', n); await page.waitForTimeout(250);
+    await page.locator('.row').first().click(); await page.waitForTimeout(900);
+    const tags = (await page.locator('.picked .tag').allInnerTexts()).map(s => s.toUpperCase());
+    return tags.includes(F.stengtTag.toUpperCase()) && !tags.includes(F.uavklart.toUpperCase()) && n;
+  });
 
   console.log('— søk og sortering —');
   await t('søk uten aksent finner Ségognole', async () => {

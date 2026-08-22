@@ -78,6 +78,38 @@ meste av massivet uten at det kom noen ny sluttdato å vise til.
 ikke redigeres for hånd. Når ONF gjenåpner en sektor, endres `s` til `open` og
 skriptet kjøres på nytt.
 
+### Statusfeltet bærer to slags verdier
+
+`SECTORS[].s` er ett felt med to helt ulike slags innhold, og det er verdt å ha
+klart for seg før man rører det.
+
+**Adgangsstatus** — `open`, `stengt_annet`, `uavklart` — settes av et menneske
+ut fra oppslag og vedtak. Den står i `ADGANG` i `beregn.py` og blir aldri
+overskrevet.
+
+**Brannkategori** — `brent_mye`, `brent_delvis`, `brent_kant`, `naer`, `stengt`
+— regnes ut av `beregn.py` fra hvor mange av sektorens blokkproblemer som ligger
+i brannflaten, og hvor langt den er fra nærmeste flate. Den settes bare på
+sektorer som *ikke* har en adgangsstatus.
+
+Det gir invarianten sida hviler på: **en sektor som bærer en brannkategori, er
+ikke ført som åpen.** Er den åpnet, får den `open` og faller ut av kategorien.
+Derfor kan `CAT`-tekstene for `naer` og `stengt` si at sektorene ligger i sona
+som fortsatt er stengt — det følger av at de ikke er merket åpne, ikke av en
+egen måling.
+
+Merk hva `stengt` *ikke* betyr lenger. Navnet ble valgt i juli, da hele massivet
+var stengt og kategorien falt sammen med «ligger i en av de tre stengte
+statsskogene». Etter gjenåpninga 22. august 2026 betyr den bare: uberørt av
+brannen, over en kilometer fra nærmeste brannflate, og ikke ført som åpen. De
+seks sektorene som bærer den nå, ligger i den gjenværende stengte sona — fire i
+Apremont og to i Trois Pignons — ikke i en hel statsskog. `naer` er det samme,
+med under en kilometer til flata.
+
+Navnet er beholdt med vilje: `tools/statuslogg.json` er øyeblikksbildet
+`logg.py` sammenlikner mot, så en omdøping ville gitt en falsk
+«har byttet statuskategori»-oppføring for hver eneste sektor.
+
 ### To forbud, ikke ett
 
 Sektorene ligger i to departementer, og de har hver sin ordning. Forskjellen er
