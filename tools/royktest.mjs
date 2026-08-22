@@ -45,7 +45,7 @@ const SPRAAK = {
     tall: ['926', '921', '23 613', '22 692', '2 104', '19 137', '76 atskilte'],
     panel: '153 av 475', gammelt: '56,3', pct: '32,2 %',
     metode: 'Hva tallene bygger på', knapp: 'EN',
-    tom: 'Ingen sektorer passer søket.', logg: 'Adgangsstatus oppdatert',
+    tom: 'Ingen sektorer passer søket.', logg: '51 sektorer åpnet',
     alleKnapp: 'Åpne alle områder', alleLukk: 'Lukk alle områder',
     klSum: '1 877 av 5 935 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
     klRen: 'Ingen av 2 339 blokker brent',
@@ -59,7 +59,7 @@ const SPRAAK = {
     tall: ['926', '921', '23,613', '22,692', '2,104', '19,137', '76 separate'],
     panel: '153 of 475', gammelt: '56.3', pct: '32.2%',
     metode: 'What the figures rest on', knapp: 'NO',
-    tom: 'No sectors match that search.', logg: 'Access status updated',
+    tom: 'No sectors match that search.', logg: '51 sectors reopened',
     alleKnapp: 'Expand all areas', alleLukk: 'Collapse all areas',
     klSum: '1,877 of 5,935 boulders', klTally: 'All 90 sectors across 19 areas.',
     klRen: 'None of 2,339 boulders burned',
@@ -125,13 +125,13 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   for (const n of F.tall) await t(`«${n}» finnes`, () => kropp.includes(n));
 
   console.log('— endringsloggen —');
-  await t('tjue oppføringer', async () => (await page.locator('.tl li').count()) === 20 ? '20' : false);
+  await t('tjuetre oppføringer', async () => (await page.locator('.tl li').count()) === 23 ? '23' : false);
   await t('nyeste står øverst', async () =>
     (await page.locator('.tl li').first().innerText()).includes(F.logg));
   await t('oppføringene lenker til kilder', async () =>
     (await page.locator('.tl .k').count()) >= 5);
   await t('datoene er maskinlesbare', async () =>
-    (await page.locator('.tl time[datetime]').count()) === 20);
+    (await page.locator('.tl time[datetime]').count()) === 23);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
 
@@ -199,23 +199,34 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     await page.locator('.row').first().click(); await page.waitForTimeout(900);
     return !(await page.locator('.picked').innerText()).includes(F.ess);
   });
-  /* Mont d'Olivet ligger utenfor de tre statsskogene, men innenfor forbudet.
-     Sier sida «forbudet gjelder ikke her», er det direkte feil. */
-  await t('Mont d’Olivet sies å være innenfor forbudet', async () => {
+  /* Mont d'Olivet lå utenfor de tre statsskogene, men innenfor forbudet, helt til
+     vedtaket av 21. august sluttet å omfatte kommuneskogen i Nemours. Nå skal sida
+     ikke lenger hevde at sektoren er innenfor et forbud. */
+  await t('Mont d’Olivet sies ikke lenger å være innenfor forbudet', async () => {
     await page.fill('#q', 'Olivet'); await page.waitForTimeout(250);
     await page.locator('.row').first().click(); await page.waitForTimeout(900);
     const s = await page.locator('.picked').innerText();
-    return s.includes(F.nemours) && !s.includes(F.ikkeher);
+    return !s.includes(F.nemours);
   });
 
   /* Uavklart skal verken påstå åpen eller stengt. Ryker dette, har sida begynt
-     å svare på et spørsmål den nettopp har sagt at den ikke kan svare på. */
-  await t('Rocher Gréau er uavklart, uten «stengt»-merkelapp', async () => {
-    await page.fill('#q', 'Greau'); await page.waitForTimeout(250);
+     å svare på et spørsmål den nettopp har sagt at den ikke kan svare på.
+     La Ségognole er uavklart fordi grensa for den stengte sona går tvers gjennom
+     sektoren; Rocher Gréau var uavklart til byen Nemours ble oppgitt som hjemmel. */
+  await t('La Ségognole er uavklart, uten «stengt»-merkelapp', async () => {
+    await page.fill('#q', 'Ségognole'); await page.waitForTimeout(250);
     await page.locator('.row').first().click(); await page.waitForTimeout(900);
     /* Merkelappene settes i versaler av CSS, og innerText gir dem sånn. */
     const tags = (await page.locator('.picked .tag').allInnerTexts()).map(s => s.toUpperCase());
     return tags.includes(F.uavklart.toUpperCase()) && !tags.includes(F.stengtTag.toUpperCase());
+  });
+  /* Rocher Gréau er nå stengt av en annen hjemmel enn ferdselsforbudet, og skal
+     bære «stengt»-merkelappen — ikke «uavklart». */
+  await t('Rocher Gréau er stengt, ikke uavklart', async () => {
+    await page.fill('#q', 'Greau'); await page.waitForTimeout(250);
+    await page.locator('.row').first().click(); await page.waitForTimeout(900);
+    const tags = (await page.locator('.picked .tag').allInnerTexts()).map(s => s.toUpperCase());
+    return tags.includes(F.stengtTag.toUpperCase()) && !tags.includes(F.uavklart.toUpperCase());
   });
 
   console.log('— søk og sortering —');
@@ -455,13 +466,18 @@ for (const lang of Object.keys(SPRAAK)) {
 }
 
 console.log('\n══ utløpt ferdselsforbud ══');
-// Klokka må stilles forbi META.ban_until, ellers er det ingenting å varsle om.
-// Blir forbudet forlenget igjen, må denne datoen flyttes med.
+/* Etter gjenåpninga 22. august finnes det ikke noe generelt ferdselsforbud, og
+   META.ban_until er null. Da skal ruta stå tom uansett hvor klokka står — det er
+   det som testes her. Settes ban_until til en dato igjen, skal denne bolken
+   tilbake til å stille klokka forbi datoen og vente teksten under. */
 for (const [lang, bit] of [['nb', 'Den datoen er passert'], ['en', 'That date has passed']]) {
-  const { page } = await nySide({ q: '?lang=' + lang, tid: '2026-08-27T09:00:00' });
-  await t(`varselet vises på ${lang}`, async () =>
-    (await page.locator('#warn').isVisible()) &&
-    (await page.locator('#warn').innerText()).includes(bit));
+  const { page } = await nySide({ q: '?lang=' + lang, tid: '2026-09-30T09:00:00' });
+  const satt = await page.evaluate(() => META.ban_until);
+  await t(`varselruta stemmer med ban_until (${lang})`, async () =>
+    satt
+      ? (await page.locator('#warn').isVisible()) &&
+        (await page.locator('#warn').innerText()).includes(bit)
+      : !(await page.locator('#warn').isVisible()) && 'ingen ban_until, ruta står tom');
   await page.close();
 }
 
