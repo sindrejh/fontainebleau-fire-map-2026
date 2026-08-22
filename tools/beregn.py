@@ -108,6 +108,19 @@ def areal_ha(ring):
 
 
 def kategori(gammel, stein, km):
+    """Brannkategorien til en sektor uten adgangsstatus.
+
+    Adgangsstatus vinner alltid, sa en sektor som er fort som apen faller ut her.
+    Det er invarianten sida hviler pa: barer en sektor en brannkategori, er den
+    ikke fort som apen.
+
+    Merk hva "stengt" betyr. Navnet ble valgt i juli 2026, da hele massivet var
+    stengt og kategorien falt sammen med "ligger i en av de tre stengte
+    statsskogene". Etter gjenapninga 22. august 2026 betyr den bare: uberort av
+    brannen, over NAER_KM fra naermeste brannflate, og ikke fort som apen. Navnet
+    er beholdt fordi statuslogg.json er oyeblikksbildet logg.py sammenlikner mot,
+    og en omdoping ville gitt en falsk statusendring for hver eneste sektor.
+    """
     if gammel in ADGANG:
         return gammel
     if stein > T_MYE:

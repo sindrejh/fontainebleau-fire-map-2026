@@ -37,6 +37,22 @@ ikke står der, blir overskrevet ved neste kjøring.
 sektoren er ført som stengt, at vedtaket som stengte den er utløpt, og at vi
 ikke har funnet noe nytt. Finner du hjemmelen, er statusen ikke lenger uavklart.
 
+**`stengt` er en brannkategori, ikke en påstand om en statsskog.** Navnet ble
+valgt i juli, da hele massivet var stengt og kategorien falt sammen med «ligger
+i en av de tre stengte statsskogene». Etter gjenåpninga 22. august 2026 betyr
+den: uberørt av brannen, over en kilometer unna nærmeste brannflate, og ikke
+ført som åpen. Skriver du tekst som forutsetter det gamle innholdet — at
+sektoren ligger i en stengt statsskog — blir den feil for de fleste sektorene i
+de samme skogene, som nå er åpne. Det var nøyaktig den feilen `iSkog` sto med på
+hvert eneste sektorkort etter gjenåpninga.
+
+**En sektor med brannkategori er ikke ført som åpen.** `beregn.py` setter bare
+kategori på sektorer uten adgangsstatus, så `open` og brannkategoriene utelukker
+hverandre. Det er den invarianten `CAT`-tekstene for `naer` og `stengt` hviler
+på når de sier at sektorene ligger i sona som fortsatt er stengt. Endrer du
+`kategori()` slik at en åpen sektor kan få en brannkategori, begynner sida å
+kalle åpne sektorer stengte.
+
 **Ingen tall i prosaen.** All tekst bygges av `META` i `tekster()`. Hovedtallet
 sto en gang tre steder med tre ulike verdier samtidig. Skal du skrive et tall i
 en setning, hent det fra `META` — og mangler feltet, legg det til i `beregn.py`.
