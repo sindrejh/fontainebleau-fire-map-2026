@@ -1,11 +1,13 @@
 # Fontainebleau etter brannen — statuskart
 
 Interaktivt kart over hvilke buldresektorer i Fontainebleau som ble rammet av
-skogbrannen i juli 2026, og hvilke som bare er stengt.
+skogbrannen i juli 2026, og hvilke som fortsatt er stengt.
 
-**Hovedfunnet:** brannen tok 926 hektar. Ferdselsforbudet stengte 23 613 hektar.
-Bare 3,9 prosent av det stengte arealet har faktisk brent. Av de 19 137
-blokkproblemene i Bleau ligger 2 104 — 11 prosent — innenfor brannflaten.
+**Hovedfunnet:** brannen tok 926 hektar. Ferdselsforbudet stengte 23 613 hektar
+— brannen tok 3,9 prosent av det — og ble opphevet for det meste av massivet
+22. august 2026. Av de 19 137 blokkproblemene i Bleau ligger 2 104 — 11 prosent
+— innenfor brannflaten. Det som fortsatt er stengt, er Trois Pignons og sonene
+som brant.
 
 ## Slik publiserer du siden
 
@@ -59,14 +61,18 @@ Bare disse feltene er ferskvare:
 |---|---|
 | `META.updated` | Datoen i toppstripa |
 | `META.access_date` | Datoen faktakortet «Åpne sektorer» viser |
-| `META.ban_until` | Datoen ferdselsforbudet gjelder til, vist i samme kort |
+| `META.ban_until` | Datoen ferdselsforbudet gjelder til — `null` når det ikke finnes noe generelt forbud |
+| `META.reopen_date` | Datoen massivet i all hovedsak åpnet igjen, vist i samme kort og i bunnteksten |
 | `META.ess_until` | Datoen Essonnes siste forbud gjaldt til, vist på de sektorene |
 | `SECTORS[].s` | Statusen på hver sektor — sett `open` ved gjenåpning |
 | | `uavklart` når sektoren er ført som stengt uten at hjemmelen finnes |
 
 Datoene skrives som `ÅÅÅÅ-MM-DD`. Sida formaterer dem selv, på norsk eller
 engelsk. Går datoen i `ban_until` ut, sier sida fra av seg selv med en varselrute
-i stedet for å vise en utløpt dato som om den fortsatt gjaldt.
+i stedet for å vise en utløpt dato som om den fortsatt gjaldt. Er `ban_until`
+`null`, finnes det ikke noe generelt forbud å gå ut, og ruta står tom — det er
+tilstanden etter gjenåpninga 22. august 2026, da forbudet ble opphevet for det
+meste av massivet uten at det kom noen ny sluttdato å vise til.
 
 `META.n_open` og de andre opptellingene regnes ut av `tools/beregn.py` og skal
 ikke redigeres for hånd. Når ONF gjenåpner en sektor, endres `s` til `open` og
@@ -79,7 +85,9 @@ grunnen til at `ess` finnes.
 
 **Seine-et-Marne** stenger navngitte skoger — Fontainebleau, Trois Pignons, la
 Commanderie, Nanteau-Poligny og kommuneskogen i Nemours — og vedtakene står i
-ukevis. Det er dette `ban_until` følger.
+ukevis. Det er dette `ban_until` følger. Fra 22. august 2026 er forbudet opphevet
+for det meste av massivet; det som står igjen, er Trois Pignons og sonene som
+brant, og det er tegnet på et kartvedlegg i stedet for å følge skoggrensene.
 
 **Essonne** stenger *alle* skoger i departementet over 0,5 hektar, private som
 offentlige, pluss 200 meter rundt dem. Vedtakene varer to–tre døgn og kommer
@@ -323,11 +331,12 @@ bouldering access. The official Copernicus EMS burn perimeter is tested against
 every single boulder problem in Boolder's dataset, rather than against a
 bounding box per sector.
 
-926 hectares burned, in 76 separate patches. 23 613 hectares remain closed, and
-only 3.9 % of that closed area was affected — the closure is about hazardous
-trees and smouldering peat, not destroyed forest. Of the 19 137 boulder problems
-in Bleau, 2 104 (11 %) fall inside the burn perimeter, across 15 sectors; five
-sectors have every one of their boulders inside it.
+926 hectares burned, in 76 separate patches. The access ban closed 23 613
+hectares — only 3.9 % of which was affected — and was lifted across most of the
+massif on 22 August 2026; Trois Pignons and the burned zones remain closed. Of
+the 19 137 boulder problems in Bleau, 2 104 (11 %) fall inside the burn
+perimeter, across 15 sectors; five sectors have every one of their boulders
+inside it.
 
 The page is available in both Norwegian and English — use the language button in
 the top bar, or add `?lang=en` to the address. It defaults to English unless your
