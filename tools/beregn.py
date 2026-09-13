@@ -40,8 +40,10 @@ NAER_KM = 1.0
 # Adgangsstatus er ikke utledet av brannen og skrives ikke over. "uavklart" horer
 # med her: den sier at vi ikke finner hjemmelen, og det er en menneskelig
 # vurdering. Uten den i lista ville kategori() satt Beauvais til "stengt" ved
-# neste kjoring, og vurderingen ville forsvunnet uten spor.
-ADGANG = ("open", "stengt_annet", "uavklart")
+# neste kjoring, og vurderingen ville forsvunnet uten spor. Det samme gjelder
+# "delvis": at grensa for den stengte sona gar tvers gjennom en sektor, folger
+# av et kartvedlegg, ikke av brannflaten.
+ADGANG = ("open", "stengt_annet", "uavklart", "delvis")
 
 
 def les(navn, src, slutt=";\n"):
@@ -225,6 +227,7 @@ def main():
     META["n_vurdert"] = sum(1 for s in SECTORS if s["iaoi"])
     META["n_total"] = len(SECTORS)
     META["n_open"] = sum(1 for s in SECTORS if s["s"] == "open")
+    META["n_delvis"] = sum(1 for s in SECTORS if s["s"] == "delvis")
     META["rings"] = len(RINGER)
     META["ring_ha"] = round(sum(areal_ha(r) for r in RINGER))
     # Naermeste sektor utenfor Copernicus' analyseomrade. Sier hvor stor klaring

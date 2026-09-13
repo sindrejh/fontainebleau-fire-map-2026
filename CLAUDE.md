@@ -27,10 +27,16 @@ testes mot brannflaten, fordi det er de samme koordinatene sida publiserer og
 tegner. Måler du fullpresise koordinater og publiserer avrundede, havner blokker
 inntil brannkanten på hver sin side av grensa i tallet og i kartet.
 
-**Adgangsstatus er en menneskelig avgjørelse.** `open`, `stengt_annet` og
-`uavklart` følger av oppslag og vedtak, ikke av brannflaten. `beregn.py` rører
+**Adgangsstatus er en menneskelig avgjørelse.** `open`, `delvis`, `stengt_annet`
+og `uavklart` følger av oppslag og vedtak, ikke av brannflaten. `beregn.py` rører
 dem ikke, og skal fortsette å la være — de står i `ADGANG`, og en status som
 ikke står der, blir overskrevet ved neste kjøring.
+
+**`delvis` er både åpen og stengt.** Den sier at grensa for den stengte sona går
+tvers gjennom sektoren, ikke at noen er i tvil. Derfor bærer den verken
+«stengt»-merkelappen eller «åpen», og `SECTORS[].dn` sier hvilken del som er
+stengt der kilden oppgir det. Setter du «stengt»-merkelappen på den likevel, har
+sida skjult halvparten av det kilden faktisk sier.
 
 **`uavklart` betyr at vi ikke finner hjemmelen.** Den er ikke en mildere
 «stengt», og den skal ikke settes fordi noe er uoversiktlig. Den sier at
@@ -52,6 +58,15 @@ hverandre. Det er den invarianten `CAT`-tekstene for `naer` og `stengt` hviler
 på når de sier at sektorene ligger i sona som fortsatt er stengt. Endrer du
 `kategori()` slik at en åpen sektor kan få en brannkategori, begynner sida å
 kalle åpne sektorer stengte.
+
+**Statsskogene er ikke stengt lenger — sonene er.** Etter arrêté 1386 av
+28. august 2026 er det avgrensede soner som er stengt, til og med 1. september
+2027. Skoglaget i kartet heter derfor bare «Statsskog», og ingen tekst skal si
+at det å ligge i en av de tre skogene betyr at man er stengt ute. Sonegrensene
+finnes bare som skannede kartvedlegg uten koordinater, så de kan ikke måles mot
+sektorene slik brannflaten og skoggrensene kan. Hvilke sektorer de treffer, er
+hentet fra lista over åpne sektorer — ikke målt, og skal ikke framstilles som
+målt.
 
 **Ingen tall i prosaen.** All tekst bygges av `META` i `tekster()`. Hovedtallet
 sto en gang tre steder med tre ulike verdier samtidig. Skal du skrive et tall i

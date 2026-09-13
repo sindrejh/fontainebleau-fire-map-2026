@@ -37,34 +37,34 @@ async function nySide(opts = {}) {
   return { page, feil };
 }
 
-/* Det som skal stemme på begge språk. Tallene skrives ulikt — 19 137 mot
-   19,137 — så hver forventning bærer sin egen skrivemåte. */
+/* Det som skal stemme på begge språk. Tallene skrives ulikt — 19 139 mot
+   19,139 — så hver forventning bærer sin egen skrivemåte. */
 const SPRAAK = {
   nb: {
     h1: 'Hva brannen faktisk tok.', nav: 'KART',
-    tall: ['926', '921', '23 613', '22 692', '2 104', '19 137', '76 atskilte'],
+    tall: ['926', '921', '23 613', '22 692', '2 104', '19 139', '76 atskilte'],
     panel: '153 av 475', gammelt: '56,3', pct: '32,2 %',
     metode: 'Hva tallene bygger på', knapp: 'EN',
-    tom: 'Ingen sektorer passer søket.', logg: '51 sektorer åpnet',
+    tom: 'Ingen sektorer passer søket.', logg: 'Delvis åpen er blitt en egen kategori',
     alleKnapp: 'Åpne alle områder', alleLukk: 'Lukk alle områder',
-    klSum: '1 877 av 5 935 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
+    klSum: '1 877 av 5 937 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
     klRen: 'Ingen av 2 339 blokker brent',
     ess: 'Ligger i Essonne.', nemours: 'Forêt communale de Nemours',
-    uavklart: 'Uavklart', stengtTag: 'Stengt',
+    uavklart: 'Uavklart', delvis: 'Delvis åpen', stengtTag: 'Stengt',
     full: 'Fullskjerm', fullAv: 'Avslutt fullskjerm', forklaring: 'Tegnforklaring',
     forkBolk: 'Brannflate', forkStatus: 'Uberørt, men stengt',
   },
   en: {
     h1: 'What the fire actually took.', nav: 'MAP',
-    tall: ['926', '921', '23,613', '22,692', '2,104', '19,137', '76 separate'],
+    tall: ['926', '921', '23,613', '22,692', '2,104', '19,139', '76 separate'],
     panel: '153 of 475', gammelt: '56.3', pct: '32.2%',
     metode: 'What the figures rest on', knapp: 'NO',
-    tom: 'No sectors match that search.', logg: '51 sectors reopened',
+    tom: 'No sectors match that search.', logg: 'Partly open becomes a category of its own',
     alleKnapp: 'Expand all areas', alleLukk: 'Collapse all areas',
-    klSum: '1,877 of 5,935 boulders', klTally: 'All 90 sectors across 19 areas.',
+    klSum: '1,877 of 5,937 boulders', klTally: 'All 90 sectors across 19 areas.',
     klRen: 'None of 2,339 boulders burned',
     ess: 'Lies in the Essonne.', nemours: 'Forêt communale de Nemours',
-    uavklart: 'Unresolved', stengtTag: 'Closed',
+    uavklart: 'Unresolved', delvis: 'Partly open', stengtTag: 'Closed',
     full: 'Full screen', fullAv: 'Exit full screen', forklaring: 'Legend',
     forkBolk: 'Burn perimeter', forkStatus: 'Untouched, but closed',
   },
@@ -125,13 +125,13 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   for (const n of F.tall) await t(`«${n}» finnes`, () => kropp.includes(n));
 
   console.log('— endringsloggen —');
-  await t('tjuetre oppføringer', async () => (await page.locator('.tl li').count()) === 23 ? '23' : false);
+  await t('sjuogtjue oppføringer', async () => (await page.locator('.tl li').count()) === 27 ? '27' : false);
   await t('nyeste står øverst', async () =>
     (await page.locator('.tl li').first().innerText()).includes(F.logg));
   await t('oppføringene lenker til kilder', async () =>
     (await page.locator('.tl .k').count()) >= 5);
   await t('datoene er maskinlesbare', async () =>
-    (await page.locator('.tl time[datetime]').count()) === 23);
+    (await page.locator('.tl time[datetime]').count()) === 27);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
 
@@ -209,24 +209,35 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     return !s.includes(F.nemours);
   });
 
-  /* Uavklart skal verken påstå åpen eller stengt. Ryker dette, har sida begynt
-     å svare på et spørsmål den nettopp har sagt at den ikke kan svare på.
-     La Ségognole er uavklart fordi grensa for den stengte sona går tvers gjennom
-     sektoren; Rocher Gréau var uavklart til byen Nemours ble oppgitt som hjemmel. */
-  await t('La Ségognole er uavklart, uten «stengt»-merkelapp', async () => {
+  /* En delvis åpen sektor er åpen og stengt på én gang. Bærer den «stengt»-
+     merkelappen, har sida skjult halvparten av det kilden faktisk sier.
+     La Ségognole er delvis åpen fordi grensa for den stengte sona går tvers
+     gjennom sektoren. */
+  await t('La Ségognole er delvis åpen, uten «stengt»-merkelapp', async () => {
     await page.fill('#q', 'Ségognole'); await page.waitForTimeout(250);
     await page.locator('.row').first().click(); await page.waitForTimeout(900);
     /* Merkelappene settes i versaler av CSS, og innerText gir dem sånn. */
     const tags = (await page.locator('.picked .tag').allInnerTexts()).map(s => s.toUpperCase());
-    return tags.includes(F.uavklart.toUpperCase()) && !tags.includes(F.stengtTag.toUpperCase());
+    return tags.includes(F.delvis.toUpperCase()) && !tags.includes(F.stengtTag.toUpperCase());
   });
-  /* Rocher Gréau er nå stengt av en annen hjemmel enn ferdselsforbudet, og skal
-     bære «stengt»-merkelappen — ikke «uavklart». */
-  await t('Rocher Gréau er stengt, ikke uavklart', async () => {
+  /* Sektorene som har vært stengt uten hjemmel, er åpnet igjen. Ingen av dem
+     skal bære «stengt»-merkelappen lenger. */
+  await t('Rocher Gréau er åpen, uten «stengt»-merkelapp', async () => {
     await page.fill('#q', 'Greau'); await page.waitForTimeout(250);
     await page.locator('.row').first().click(); await page.waitForTimeout(900);
     const tags = (await page.locator('.picked .tag').allInnerTexts()).map(s => s.toUpperCase());
-    return tags.includes(F.stengtTag.toUpperCase()) && !tags.includes(F.uavklart.toUpperCase());
+    return !tags.includes(F.stengtTag.toUpperCase()) && !tags.includes(F.uavklart.toUpperCase());
+  });
+  /* Kategorier ingen sektor bærer, skal ikke stå i tegnforklaringa: fargen
+     finnes ikke i kartet, og filterknappen ville alltid gitt null treff. */
+  await t('tomme statuskategorier står ikke i tegnforklaringa', async () => {
+    const tomme = await page.evaluate(() =>
+      Object.keys(CAT).filter(k => !SECTORS.some(s => s.s === k)).map(k => CAT[k]));
+    if (!tomme.length) return true;
+    const leg = await page.locator('#legend').innerText();
+    const chips = await page.locator('#filters').innerText();
+    return tomme.every(c => !leg.includes(c.t) && !leg.includes(c.t_en)
+                         && !chips.includes(c.t) && !chips.includes(c.t_en));
   });
   /* CAT-teksten for «naer» sier at sektorene ligger i sona som fortsatt er
      stengt. Den påstanden hviler på at en brannkategori og «open» utelukker
@@ -392,7 +403,7 @@ console.log('\n══ språkbytte ══');
   await t('URL-en følger med', async () =>
     (await page.evaluate(() => location.search)).includes('lang=en'));
   await t('kartlagene er oversatt', async () =>
-    (await page.locator('.leaflet-control-layers-overlays label').first().innerText()).includes('Closed'));
+    (await page.locator('.leaflet-control-layers-overlays label').first().innerText()).includes('State forest'));
   await t('valgt sektor overlever bytte', async () => {
     await page.fill('#q', 'diplodocus'); await page.waitForTimeout(250);
     await page.locator('.row').first().click(); await page.waitForTimeout(800);

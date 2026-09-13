@@ -5,9 +5,10 @@ skogbrannen i juli 2026, og hvilke som fortsatt er stengt.
 
 **Hovedfunnet:** brannen tok 926 hektar. Ferdselsforbudet stengte 23 613 hektar
 — brannen tok 3,9 prosent av det — og ble opphevet for det meste av massivet
-22. august 2026. Av de 19 137 blokkproblemene i Bleau ligger 2 104 — 11 prosent
-— innenfor brannflaten. Det som fortsatt er stengt, er Trois Pignons og sonene
-som brant.
+22. august 2026. Av de 19 139 blokkproblemene i Bleau ligger 2 104 — 11 prosent
+— innenfor brannflaten. Det som fortsatt er stengt, er sonene som brant: arrêté
+2026/CAB/SIDPC/1386 av 28. august 2026 stenger dem fram til og med 1. september
+2027.
 
 ## Slik publiserer du siden
 
@@ -33,8 +34,9 @@ All data ligger i én blokk øverst i `<script>`, merket `/* === DATA === */`.
 | `SECTORS` | 90 sektorer med koordinater, andel brent og avstand til brannflate |
 | `SECTORS[].dep` | Departementet sektoren ligger i, `77` eller `91` |
 | `SECTORS[].annenskog` | Skog forbudet omfatter, men kartet ikke tegner |
+| `SECTORS[].dn` | Hva som er stengt i en delvis åpen sektor, der kilden sier det |
 | `HISTORIKK` | Endringsloggen, med norsk og engelsk tekst per oppføring |
-| `PTS` | Posisjonen til hver av de 19 137 blokkene, delta-kodet |
+| `PTS` | Posisjonen til hver av de 19 139 blokkene, delta-kodet |
 | `BURN_RINGS` | Brannflaten, 76 polygoner |
 | `FORESTS` | De tre stengte statsskogene |
 | `PLACES` | Stedsnavnene i kartlaget «Steder», avslått som standard |
@@ -64,7 +66,10 @@ Bare disse feltene er ferskvare:
 | `META.ban_until` | Datoen ferdselsforbudet gjelder til — `null` når det ikke finnes noe generelt forbud |
 | `META.reopen_date` | Datoen massivet i all hovedsak åpnet igjen, vist i samme kort og i bunnteksten |
 | `META.ess_until` | Datoen Essonnes siste forbud gjaldt til, vist på de sektorene |
+| `META.ess_rest_until` | Datoen Essonnes siste restriksjonsvedtak gjaldt til — det som ikke stengte skogen |
+| `META.zone_until` | Datoen sonene som brant er stengt til, etter arrêté 1386 |
 | `SECTORS[].s` | Statusen på hver sektor — sett `open` ved gjenåpning |
+| | `delvis` når grensa for den stengte sona går tvers gjennom sektoren |
 | | `uavklart` når sektoren er ført som stengt uten at hjemmelen finnes |
 
 Datoene skrives som `ÅÅÅÅ-MM-DD`. Sida formaterer dem selv, på norsk eller
@@ -83,9 +88,16 @@ skriptet kjøres på nytt.
 `SECTORS[].s` er ett felt med to helt ulike slags innhold, og det er verdt å ha
 klart for seg før man rører det.
 
-**Adgangsstatus** — `open`, `stengt_annet`, `uavklart` — settes av et menneske
-ut fra oppslag og vedtak. Den står i `ADGANG` i `beregn.py` og blir aldri
-overskrevet.
+**Adgangsstatus** — `open`, `delvis`, `stengt_annet`, `uavklart` — settes av et
+menneske ut fra oppslag og vedtak. Den står i `ADGANG` i `beregn.py` og blir
+aldri overskrevet. `delvis` er sektorer grensa for den stengte sona går tvers
+gjennom: de er åpne og stengte på én gang, og `SECTORS[].dn` sier hvilken del
+som er stengt der kilden oppgir det.
+
+Kategorier ingen sektor bærer, står igjen i `CAT`, men vises verken i
+tegnforklaringa eller filterraden — en tom kategori forklarer en farge som ikke
+finnes i kartet. `uavklart` og `stengt_annet` har begge stått tomme og fylt seg
+opp igjen, så de blir stående i `CAT`.
 
 **Brannkategori** — `brent_mye`, `brent_delvis`, `brent_kant`, `naer`, `stengt`
 — regnes ut av `beregn.py` fra hvor mange av sektorens blokkproblemer som ligger
@@ -115,11 +127,19 @@ Navnet er beholdt med vilje: `tools/statuslogg.json` er øyeblikksbildet
 Sektorene ligger i to departementer, og de har hver sin ordning. Forskjellen er
 grunnen til at `ess` finnes.
 
-**Seine-et-Marne** stenger navngitte skoger — Fontainebleau, Trois Pignons, la
-Commanderie, Nanteau-Poligny og kommuneskogen i Nemours — og vedtakene står i
-ukevis. Det er dette `ban_until` følger. Fra 22. august 2026 er forbudet opphevet
-for det meste av massivet; det som står igjen, er Trois Pignons og sonene som
-brant, og det er tegnet på et kartvedlegg i stedet for å følge skoggrensene.
+**Seine-et-Marne** stengte navngitte skoger — Fontainebleau, Trois Pignons, la
+Commanderie, Nanteau-Poligny og kommuneskogen i Nemours — og vedtakene sto i
+ukevis. Det er dette `ban_until` følger. Fra 22. august 2026 er det forbudet
+opphevet for det meste av massivet, og `ban_until` er `null`.
+
+Det som står igjen, er ikke skoger, men soner. Arrêté 2026/CAB/SIDPC/1386 av
+28. august 2026 stenger avgrensede soner i Fontainebleau og Trois Pignons fra
+1. september 2026 til og med 1. september 2027 — det er `zone_until`. Sonene
+ligger rundt Noisy i Trois Pignons, ved la Faisanderie og ved Désert d'Apremont,
+og de er tegnet på tre kartvedlegg. Vedleggene er skannede rasterkart uten
+koordinater, så sonegrensene lar seg ikke måle mot sektorene med
+`forbudssone.py` slik skoggrensene gjør. Hvilke sektorer de treffer, er derfor
+hentet fra lista over åpne sektorer, ikke målt.
 
 **Essonne** stenger *alle* skoger i departementet over 0,5 hektar, private som
 offentlige, pluss 200 meter rundt dem. Vedtakene varer to–tre døgn og kommer
@@ -270,8 +290,8 @@ et tidligere valg fra `localStorage`, så nettleserens språk. Nordiske lesere f
 norsk, alle andre engelsk — ellers står de igjen med en side de ikke kan lese.
 Knappen i toppstripa bytter, og valget følger med i adressa.
 
-Tall og datoer formateres etter språket: `19 137` og `3,9 %` på norsk,
-`19,137` og `3.9%` på engelsk.
+Tall og datoer formateres etter språket: `19 139` og `3,9 %` på norsk,
+`19,139` og `3.9%` på engelsk.
 
 ## Røyktest
 
@@ -296,6 +316,7 @@ varselet om utløpt ferdselsforbud dukker opp når datoen er passert.
 | Sektorer og blokker | [Boolder](https://github.com/boolder-org/boolder-data) | CC BY 4.0 |
 | Åpen/stengt | [CrashPad Tours](https://crashpadtours.fr/fontainebleau-incendie-secteurs-ouverts/) | — |
 | Ferdselsforbud, Seine-et-Marne | Arrêtés 2026/CAB/SIDPC/1300 og 1301 av 06.08.2026 | Offentlig vedtak |
+| Stengte soner fra 01.09.2026 | Arrêté 2026/CAB/SIDPC/1386 av 28.08.2026, med tre kartvedlegg | Offentlig vedtak |
 | Ferdselsforbud, Essonne | Arrêtés 2026-DDT-SEAF av 07.07.2026 og 2026-PREF-DCSIPC-SIDPC-1244 av 27.07.2026 | Offentlig vedtak |
 | Bakgrunnskart | OpenStreetMap, CARTO, Esri | Se attribusjon i kartet |
 
@@ -309,7 +330,7 @@ kildetabellen over.
 
 ## Metode
 
-Hver av de 19 137 blokkene i Boolders datasett testes mot Copernicus-brannflaten
+Hver av de 19 139 blokkene i Boolders datasett testes mot Copernicus-brannflaten
 med en kryssingstest. 2 104 av dem ligger innenfor. Det er dette tallet siden
 oppgir per sektor.
 
@@ -365,8 +386,9 @@ bounding box per sector.
 
 926 hectares burned, in 76 separate patches. The access ban closed 23 613
 hectares — only 3.9 % of which was affected — and was lifted across most of the
-massif on 22 August 2026; Trois Pignons and the burned zones remain closed. Of
-the 19 137 boulder problems in Bleau, 2 104 (11 %) fall inside the burn
+massif on 22 August 2026; the zones that burned remain closed, under arrêté
+2026/CAB/SIDPC/1386 of 28 August 2026, through 1 September 2027. Of
+the 19 139 boulder problems in Bleau, 2 104 (11 %) fall inside the burn
 perimeter, across 15 sectors; five sectors have every one of their boulders
 inside it.
 
