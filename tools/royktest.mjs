@@ -45,7 +45,7 @@ const SPRAAK = {
     tall: ['926', '921', '23 613', '22 692', '2 104', '19 139', '76 atskilte'],
     panel: '153 av 475', gammelt: '56,3', pct: '32,2 %',
     metode: 'Hva tallene bygger på', knapp: 'EN',
-    tom: 'Ingen sektorer passer søket.', logg: 'Delvis åpen er blitt en egen kategori',
+    tom: 'Ingen sektorer passer søket.', logg: 'Statusene er målt mot ONFs soner',
     alleKnapp: 'Åpne alle områder', alleLukk: 'Lukk alle områder',
     klSum: '1 877 av 5 937 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
     klRen: 'Ingen av 2 339 blokker brent',
@@ -59,7 +59,7 @@ const SPRAAK = {
     tall: ['926', '921', '23,613', '22,692', '2,104', '19,139', '76 separate'],
     panel: '153 of 475', gammelt: '56.3', pct: '32.2%',
     metode: 'What the figures rest on', knapp: 'NO',
-    tom: 'No sectors match that search.', logg: 'Partly open becomes a category of its own',
+    tom: 'No sectors match that search.', logg: 'The statuses are measured against ONF’s zones',
     alleKnapp: 'Expand all areas', alleLukk: 'Collapse all areas',
     klSum: '1,877 of 5,937 boulders', klTally: 'All 90 sectors across 19 areas.',
     klRen: 'None of 2,339 boulders burned',
@@ -125,13 +125,13 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   for (const n of F.tall) await t(`«${n}» finnes`, () => kropp.includes(n));
 
   console.log('— endringsloggen —');
-  await t('sjuogtjue oppføringer', async () => (await page.locator('.tl li').count()) === 27 ? '27' : false);
+  await t('tretti oppføringer', async () => (await page.locator('.tl li').count()) === 30 ? '30' : false);
   await t('nyeste står øverst', async () =>
     (await page.locator('.tl li').first().innerText()).includes(F.logg));
   await t('oppføringene lenker til kilder', async () =>
     (await page.locator('.tl .k').count()) >= 5);
   await t('datoene er maskinlesbare', async () =>
-    (await page.locator('.tl time[datetime]').count()) === 27);
+    (await page.locator('.tl time[datetime]').count()) === 30);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
 

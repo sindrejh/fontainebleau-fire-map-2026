@@ -62,11 +62,18 @@ kalle åpne sektorer stengte.
 **Statsskogene er ikke stengt lenger — sonene er.** Etter arrêté 1386 av
 28. august 2026 er det avgrensede soner som er stengt, til og med 1. september
 2027. Skoglaget i kartet heter derfor bare «Statsskog», og ingen tekst skal si
-at det å ligge i en av de tre skogene betyr at man er stengt ute. Sonegrensene
-finnes bare som skannede kartvedlegg uten koordinater, så de kan ikke måles mot
-sektorene slik brannflaten og skoggrensene kan. Hvilke sektorer de treffer, er
-hentet fra lista over åpne sektorer — ikke målt, og skal ikke framstilles som
-målt.
+at det å ligge i en av de tre skogene betyr at man er stengt ute.
+
+**Sonene måles, og ONF går foran lista.** Vedtaket selv har bare skannede
+kartvedlegg, men ONF fører de samme sonene som polygoner i et uMap, og
+`forbudssone.py` måler sektorene mot dem — kommandoen står øverst i fila. Der
+målingen og CrashPad-lista er uenige, følger sida ONF: ONF forvalter skogen og
+har tegnet sonene, og lista har vist seg å bygge på sonene fra før 1386. Det
+betyr ikke at geometrien alene avgjør. En sektor settes `open` når en kilde
+fører den som åpen, ikke fordi den ligger utenfor sona; ligger den utenfor uten
+at noen fører den som åpen, er den `uavklart`. Hver brannkategori-sektor skal
+ligge helt innenfor sonene — det er det `CAT`-tekstene for `naer` og `stengt`
+sier. Mål på nytt når ONF endrer sonelaget, og se at det fortsatt holder.
 
 **Ingen tall i prosaen.** All tekst bygges av `META` i `tekster()`. Hovedtallet
 sto en gang tre steder med tre ulike verdier samtidig. Skal du skrive et tall i

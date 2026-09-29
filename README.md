@@ -113,9 +113,9 @@ egen måling.
 Merk hva `stengt` *ikke* betyr lenger. Navnet ble valgt i juli, da hele massivet
 var stengt og kategorien falt sammen med «ligger i en av de tre stengte
 statsskogene». Etter gjenåpninga 22. august 2026 betyr den bare: uberørt av
-brannen, over en kilometer fra nærmeste brannflate, og ikke ført som åpen. De
-seks sektorene som bærer den nå, ligger i den gjenværende stengte sona — fire i
-Apremont og to i Trois Pignons — ikke i en hel statsskog. `naer` er det samme,
+brannen, over en kilometer fra nærmeste brannflate, og ikke ført som åpen.
+Sektorene som bærer den nå, ligger alle i Apremont, og alle blokkene deres er
+målt innenfor ONFs stengte soner — ikke i en hel statsskog. `naer` er det samme,
 med under en kilometer til flata.
 
 Navnet er beholdt med vilje: `tools/statuslogg.json` er øyeblikksbildet
@@ -137,9 +137,16 @@ Det som står igjen, er ikke skoger, men soner. Arrêté 2026/CAB/SIDPC/1386 av
 1. september 2026 til og med 1. september 2027 — det er `zone_until`. Sonene
 ligger rundt Noisy i Trois Pignons, ved la Faisanderie og ved Désert d'Apremont,
 og de er tegnet på tre kartvedlegg. Vedleggene er skannede rasterkart uten
-koordinater, så sonegrensene lar seg ikke måle mot sektorene med
-`forbudssone.py` slik skoggrensene gjør. Hvilke sektorer de treffer, er derfor
-hentet fra lista over åpne sektorer, ikke målt.
+koordinater, men ONF fører de samme sonene som polygoner i et uMap, og dem kan
+`forbudssone.py` måle sektorene mot. Kommandoen står øverst i
+`tools/forbudssone.py`.
+
+Adgangsstatusen i Trois Pignons og Apremont bygger derfor på to ting: målingen
+mot ONFs soner, og ONFs egne lag over tilgjengelige og ikke tilgjengelige
+klatreområder i det samme kartet. Der de er uenige med CrashPad-lista, følger
+sida ONF. En sektor settes likevel ikke `open` bare fordi den ligger utenfor
+sona — det må en kilde si. Ligger den utenfor uten at noen fører den som åpen,
+står den som `uavklart`.
 
 **Essonne** stenger *alle* skoger i departementet over 0,5 hektar, private som
 offentlige, pluss 200 meter rundt dem. Vedtakene varer to–tre døgn og kommer
@@ -315,6 +322,7 @@ varselet om utløpt ferdselsforbud dukker opp når datoen er passert.
 | Skoggrenser | [ONF OpenData](https://geo-onf.opendata.arcgis.com/), offentlige skoger i fastlands-Frankrike | Åpne data |
 | Sektorer og blokker | [Boolder](https://github.com/boolder-org/boolder-data) | CC BY 4.0 |
 | Åpen/stengt | [CrashPad Tours](https://crashpadtours.fr/fontainebleau-incendie-secteurs-ouverts/) | — |
+| Stengte soner og klatreområder | [ONFs kart over åpne og stengte soner](https://www.onf.fr/vivre-la-foret/enjeux-foret/feux-foret/+/2d9a::foret-de-fontainebleau-carte-des-sentiers-et-routes-forestieres-accessibles.html), uMap 1443097 | — |
 | Ferdselsforbud, Seine-et-Marne | Arrêtés 2026/CAB/SIDPC/1300 og 1301 av 06.08.2026 | Offentlig vedtak |
 | Stengte soner fra 01.09.2026 | Arrêté 2026/CAB/SIDPC/1386 av 28.08.2026, med tre kartvedlegg | Offentlig vedtak |
 | Ferdselsforbud, Essonne | Arrêtés 2026-DDT-SEAF av 07.07.2026 og 2026-PREF-DCSIPC-SIDPC-1244 av 27.07.2026 | Offentlig vedtak |

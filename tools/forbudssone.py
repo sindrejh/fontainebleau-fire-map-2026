@@ -12,6 +12,17 @@ grensene deres er det bare gjetning hvilke sektorer som ligger inne i dem, og
 adgangsstatus skal ikke gjettes. Hent grensene fra ONF OpenData
 (https://geo-onf.opendata.arcgis.com/) som GeoJSON og mal dem her.
 
+Sonene arrete 2026/CAB/SIDPC/1386 stenger fra 1. september 2026, finnes ikke
+der, men i ONFs uMap over apne og stengte soner. Laget "Zones interdites de
+frequentation" kan males direkte, uten a gjores om forst:
+
+    curl -o soner.geojson https://umap.openstreetmap.fr/fr/datalayer/1443097/2ef1acb6-984c-4987-b95f-d7e5e6ad6186/
+    python3 tools/forbudssone.py soner.geojson
+
+Lag-ID-en er fast sa lenge ONF redigerer det samme laget. Byttes det ut, star
+de nye ID-ene i kartets innstillinger pa
+https://umap.openstreetmap.fr/fr/map/zones-interdites-foret-de-fontainebleau_1443097
+
 Skriptet skriver ingenting. Det rapporterer, og sa avgjor et menneske. Det er
 med vilje: adgangsstatus folger av vedtak og oppslag, ikke av geometri --
 en sektor kan ligge i skogen uten a vaere omfattet, eller vaere stengt av en
@@ -139,7 +150,8 @@ def main():
         selvtest(src, SECTORS, blokker)
         if not filer:
             print("\nbruk: python3 tools/forbudssone.py <grense.geojson> ...")
-            print("hent grensene fra https://geo-onf.opendata.arcgis.com/")
+            print("hent grensene fra https://geo-onf.opendata.arcgis.com/,")
+            print("eller sonene fra 1. september fra ONFs uMap -- se toppen av fila")
             return
 
     polygoner = []
@@ -169,7 +181,8 @@ def main():
     aapne = [s["n"] for s in truffet if s["s"] == "open"]
     if aapne:
         print("\nav disse star %d oppfort som apne na: %s" % (len(aapne), ", ".join(sorted(aapne))))
-        print("sett dem til stengt_annet i SECTORS hvis vedtaket omfatter dem,")
+        print("sett dem til stengt_annet i SECTORS hvis vedtaket omfatter dem --")
+        print("eller delvis, hvis grensa gar tvers gjennom sektoren --")
         print("kjor sa beregn.py og logg.py --skriv")
 
 

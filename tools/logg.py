@@ -4,6 +4,7 @@
     python3 tools/logg.py                 # vis hva som har endret seg
     python3 tools/logg.py --skriv         # skriv oppforingen inn i HISTORIKK
     python3 tools/logg.py --skriv --dato 2026-08-04
+    python3 tools/logg.py --skriv --kilde onfkart
 
 Arbeidsgangen naar ONF aapner en sektor: sett SECTORS[].s til "open" i
 index.html, kjor beregn.py, og kjor sa dette skriptet. Det sammenlikner
@@ -50,9 +51,18 @@ def main():
         dato = sys.argv[sys.argv.index("--dato") + 1]
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", dato):
         sys.exit("datoen må være på formen ÅÅÅÅ-MM-DD")
+    # Statusene har kommet fra CrashPad-lista, men ikke bare derfra: i
+    # september ble de målt mot ONFs kart over de stengte sonene. Oppføringa
+    # skal peke på kilden endringa faktisk bygger på.
+    kilde = "crashpad"
+    if "--kilde" in sys.argv:
+        kilde = sys.argv[sys.argv.index("--kilde") + 1]
 
     src = HTML.read_text(encoding="utf8")
     SECTORS, _ = les("SECTORS", src)
+    SOURCES, _ = les("SOURCES", src)
+    if kilde not in SOURCES:
+        sys.exit("kilden %s finnes ikke i SOURCES" % kilde)
     naa = {s["n"]: s["s"] for s in SECTORS}
 
     if not SNAP.exists():
@@ -79,25 +89,41 @@ def main():
     for n in borte:
         print("  %-28s falt ut av datasettet" % n)
 
+    # «Delvis åpen» er verken åpnet eller stengt. Telles den som ikke-åpen,
+    # sier oppføringa at en sektor er stengt igjen når halve den er åpen.
+    AAPEN = ("open", "delvis")
     aapnet = sorted(n for n, a, b in endret if b == "open" and a != "open")
-    stengt = sorted(n for n, a, b in endret if a == "open" and b != "open")
+    delvis = sorted(n for n, a, b in endret if b == "delvis" and a != "delvis")
+    stengt = sorted(n for n, a, b in endret if a in AAPEN and b not in AAPEN)
     n_open = sum(1 for s in naa.values() if s == "open")
+    n_delvis = sum(1 for s in naa.values() if s == "delvis")
 
     def tekst(sp):
         d = []
         if aapnet:
             d.append(("%s er åpnet igjen." if sp == "nb" else "%s reopened.")
                      % liste(aapnet, sp))
+        if delvis:
+            en = len(delvis) == 1
+            d.append((("%s er nå delvis åpen." if en else "%s er nå delvis åpne.") if sp == "nb"
+                      else ("%s is now partly open." if en else "%s are now partly open."))
+                     % liste(delvis, sp))
         if stengt:
             d.append(("%s er stengt igjen." if sp == "nb" else "%s closed again.")
                      % liste(stengt, sp))
-        andre = [(n, a, b) for n, a, b in endret if n not in aapnet and n not in stengt]
+        andre = [(n, a, b) for n, a, b in endret
+                 if n not in aapnet and n not in delvis and n not in stengt]
         if andre:
             d.append(("%s har byttet statuskategori." if sp == "nb"
                       else "%s changed status category.")
                      % liste([n for n, _, _ in andre], sp))
-        d.append(("%d av %d sektorer står nå oppført som åpne." if sp == "nb"
-                  else "%d of %d sectors are now listed as open.") % (n_open, len(naa)))
+        d.append(("%d av %d sektorer står nå oppført som åpne" if sp == "nb"
+                  else "%d of %d sectors are now listed as open") % (n_open, len(naa)))
+        if n_delvis:
+            d[-1] += (", og %d som delvis åpne." if sp == "nb"
+                      else ", and %d as partly open.") % n_delvis
+        else:
+            d[-1] += "."
         return " ".join(d)
 
     t = ("%d sektorer åpnet" % len(aapnet)) if len(aapnet) > 1 else (
@@ -105,7 +131,7 @@ def main():
     t_en = ("%d sectors reopened" % len(aapnet)) if len(aapnet) > 1 else (
             "%s reopened" % aapnet[0]) if aapnet else "Access status updated"
 
-    ny = {"d": dato, "k": "adgang", "kilde": "crashpad",
+    ny = {"d": dato, "k": "adgang", "kilde": kilde,
           "t": t, "b": tekst("nb"), "t_en": t_en, "b_en": tekst("en")}
     print("\noppføring:")
     print(json.dumps(ny, ensure_ascii=False, indent=1))
