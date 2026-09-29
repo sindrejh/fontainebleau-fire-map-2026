@@ -45,7 +45,7 @@ const SPRAAK = {
     tall: ['926', '921', '23 613', '22 692', '2 104', '19 139', '76 atskilte'],
     panel: '153 av 475', gammelt: '56,3', pct: '32,2 %',
     metode: 'Hva tallene bygger på', knapp: 'EN',
-    tom: 'Ingen sektorer passer søket.', logg: 'Statusene er målt mot ONFs soner',
+    tom: 'Ingen sektorer passer søket.', logg: 'De stengte sonene er tegnet i kartet', sone: 'Stengt sone', skog: 'Statsskog',
     alleKnapp: 'Åpne alle områder', alleLukk: 'Lukk alle områder',
     klSum: '1 877 av 5 937 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
     klRen: 'Ingen av 2 339 blokker brent',
@@ -59,7 +59,7 @@ const SPRAAK = {
     tall: ['926', '921', '23,613', '22,692', '2,104', '19,139', '76 separate'],
     panel: '153 of 475', gammelt: '56.3', pct: '32.2%',
     metode: 'What the figures rest on', knapp: 'NO',
-    tom: 'No sectors match that search.', logg: 'The statuses are measured against ONF’s zones',
+    tom: 'No sectors match that search.', logg: 'The closed zones are drawn on the map', sone: 'Closed zone', skog: 'State forest',
     alleKnapp: 'Expand all areas', alleLukk: 'Collapse all areas',
     klSum: '1,877 of 5,937 boulders', klTally: 'All 90 sectors across 19 areas.',
     klRen: 'None of 2,339 boulders burned',
@@ -108,10 +108,20 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   await t('menyen er oversatt', async () => (await page.locator('#nav a').first().innerText()) === F.nav);
   await t('90 rader i sektorlista', async () => (await page.locator('.row').count()) === 90 ? '90' : false);
   await t('faktakort fylt', async () => (await page.locator('.facts dd').count()) === 4);
+  /* Etter 1386 er det sonene som er stengt, ikke skogene. Står statsskogen på
+     som standard, maler sida hele massivet grønt og sier det motsatte. */
+  await t('stengt sone er på og statsskog av som standard', async () => {
+    const lab = page.locator('.leaflet-control-layers-overlays label');
+    const st = {};
+    for (let i = 0; i < await lab.count(); i++)
+      st[(await lab.nth(i).innerText()).trim()] = await lab.nth(i).locator('input').isChecked();
+    return st[F.sone] === true && st[F.skog] === false;
+  });
   /* Hver rad i «Flatene i kartet» må ha nøkkelen sin. Prikkene tegnes av
      `i`-elementer, og uten dem står raden med tom rute foran teksten. */
-  await t('alle fire flateforklaringene har nøkkel', async () =>
-    (await page.locator('.shp').count()) === 4 &&
+  await t('alle fem flateforklaringene har nøkkel', async () =>
+    (await page.locator('.shp').count()) === 5 &&
+    (await page.locator('.shp .k.sone').count()) === 1 &&
     (await page.locator('.shp .k.dot i').count()) === 1 &&
     (await page.locator('.shp .k.stein i').count()) === 2);
   await t('ingen 923-rest', async () => !(await page.locator('body').innerText()).includes('923'));
@@ -125,13 +135,13 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   for (const n of F.tall) await t(`«${n}» finnes`, () => kropp.includes(n));
 
   console.log('— endringsloggen —');
-  await t('tretti oppføringer', async () => (await page.locator('.tl li').count()) === 30 ? '30' : false);
+  await t('trettien oppføringer', async () => (await page.locator('.tl li').count()) === 31 ? '31' : false);
   await t('nyeste står øverst', async () =>
     (await page.locator('.tl li').first().innerText()).includes(F.logg));
   await t('oppføringene lenker til kilder', async () =>
     (await page.locator('.tl .k').count()) >= 5);
   await t('datoene er maskinlesbare', async () =>
-    (await page.locator('.tl time[datetime]').count()) === 30);
+    (await page.locator('.tl time[datetime]').count()) === 31);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
 
@@ -403,7 +413,7 @@ console.log('\n══ språkbytte ══');
   await t('URL-en følger med', async () =>
     (await page.evaluate(() => location.search)).includes('lang=en'));
   await t('kartlagene er oversatt', async () =>
-    (await page.locator('.leaflet-control-layers-overlays label').first().innerText()).includes('State forest'));
+    (await page.locator('.leaflet-control-layers-overlays label').first().innerText()).includes('Closed zone'));
   await t('valgt sektor overlever bytte', async () => {
     await page.fill('#q', 'diplodocus'); await page.waitForTimeout(250);
     await page.locator('.row').first().click(); await page.waitForTimeout(800);
@@ -540,6 +550,42 @@ console.log('\n══ blokktellingen ══');
     });
     if (r.avvik.length) { console.log('    ' + r.avvik.join('\n    ')); return false; }
     return r.n === r.meta[1] && r.tot === r.meta[0] ? `${r.tot} / ${r.n}` : false;
+  });
+  /* CAT-tekstene for «naer» og «stengt» sier at sektorene ligger i sona som
+     fortsatt er stengt, og «delvis» at grensa går tvers gjennom. Målt mot de
+     sonene sida faktisk tegner: en brannkategori-sektor ligger helt innenfor,
+     en åpen helt utenfor, en delvis åpen på begge sider. Ryker dette, har ONF
+     endret sonene eller noen endret en status — se tools/soner.py. */
+  await t('sektorene ligger der statusen sier, målt mot sonene', async () => {
+    const avvik = await page.evaluate(() => {
+      const inne = (la, lo) => SONER.some(pol => {
+        let odde = false;
+        for (const r of pol) {
+          let v = false;
+          for (let i = 0, j = r.length - 1; i < r.length; j = i++) {
+            const yi = r[i][0], xi = r[i][1], yj = r[j][0], xj = r[j][1];
+            if ((yi > la) !== (yj > la) && lo < (xj - xi) * (la - yi) / (yj - yi) + xi) v = !v;
+          }
+          if (v) odde = !odde;
+        }
+        return odde;
+      });
+      const BRANN = ['brent_mye', 'brent_delvis', 'brent_kant', 'naer', 'stengt'];
+      const ut = [];
+      for (const s of SECTORS) {
+        const [la0, lo0, d] = PTS[s.n];
+        let a = 0, o = 0, k = 0, n = 0;
+        for (let i = 0; i < d.length; i += 2) {
+          a += d[i]; o += d[i + 1]; n++;
+          if (inne(la0 + a / 1e5, lo0 + o / 1e5)) k++;
+        }
+        if ((BRANN.includes(s.s) && k < n) || (s.s === 'open' && k > 0) ||
+            (s.s === 'delvis' && (k === 0 || k === n))) ut.push(`${s.n} (${s.s}): ${k}/${n} inne`);
+      }
+      return ut;
+    });
+    if (avvik.length) console.log('    ' + avvik.join('\n    '));
+    return !avvik.length;
   });
   await t('alle oppføringer i loggen har begge språk', async () =>
     await page.evaluate(() => HISTORIKK.every(h => h.t && h.b && h.t_en && h.b_en)));

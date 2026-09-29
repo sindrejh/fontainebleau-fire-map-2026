@@ -249,11 +249,14 @@ def main():
              "   tools/beregn.py. Rediger dem der, ikke her. */"]
     for k, v in (("META", META), ("CAT", les("CAT", src)), ("SOURCES", les("SOURCES", src)),
                  ("HISTORIKK", les("HISTORIKK", src)),
-                 ("BURN_RINGS", RINGER), ("FORESTS", les("FORESTS", src, ";\nconst SECTORS")),
+                 ("BURN_RINGS", RINGER), ("SONER", les("SONER", src)),
+                 ("FORESTS", les("FORESTS", src, ";\nconst SECTORS")),
                  ("SECTORS", SECTORS), ("PLACES", les("PLACES", src)), ("PTS", PTS)):
         if k == "HISTORIKK":
             blokk += ["/* Endringsloggen. Hver oppforing peker pa en kilde i SOURCES, og sier bare",
                       "   det kildene faktisk viser. tools/logg.py forer opp statusendringer. */"]
+        if k == "SONER":
+            blokk += ["/* De stengte sonene fra ONFs kart. Skrives av tools/soner.py, ikke her. */"]
         if k == "PTS":
             blokk += ["/* Blokkproblemene per sektor, delta-kodet. Se kvantiser() i tools/beregn.py. */"]
         blokk.append("const %s = %s;" % (k, json.dumps(v, ensure_ascii=False, separators=(", ", ": ") if k in ("META",) else (",", ":"))))

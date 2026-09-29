@@ -14,8 +14,10 @@ siden, og det er nøyaktig feilen dette prosjektet er bygget for å unngå.
 
 **Rediger aldri datablokka for hånd.** Alt mellom `/* === DATA === */` og
 `/* === END DATA === */` som gjelder `SECTORS`, `PTS` og de avledede feltene i
-`META`, skrives av `tools/beregn.py`. Håndredigering blir overskrevet ved neste
-kjøring.
+`META`, skrives av `tools/beregn.py`, og `SONER` av `tools/soner.py`.
+Håndredigering blir overskrevet ved neste kjøring. `beregn.py` skriver hele
+blokka på nytt i fast rekkefølge — en ny konstant som ikke står i lista der,
+forsvinner uten spor.
 
 **`SECTORS[].flate` skal aldri regnes ut på nytt.** Det er det gamle
 rektangelmålet fra overlappsanalysen i Lambert-93, og det finnes ikke noe sted
@@ -66,7 +68,8 @@ at det å ligge i en av de tre skogene betyr at man er stengt ute.
 
 **Sonene måles, og ONF går foran lista.** Vedtaket selv har bare skannede
 kartvedlegg, men ONF fører de samme sonene som polygoner i et uMap, og
-`forbudssone.py` måler sektorene mot dem — kommandoen står øverst i fila. Der
+`forbudssone.py` måler sektorene mot dem — kommandoen står øverst i fila.
+`soner.py` legger de samme sonene inn i kartet og måler mot de avrundede. Der
 målingen og CrashPad-lista er uenige, følger sida ONF: ONF forvalter skogen og
 har tegnet sonene, og lista har vist seg å bygge på sonene fra før 1386. Det
 betyr ikke at geometrien alene avgjør. En sektor settes `open` når en kilde
@@ -106,6 +109,9 @@ nettverk utenfor localhost for å holde på det.
 ```sh
 # regne blokktallene på nytt (krever numpy + en klone av boolder-data)
 python3 tools/beregn.py boolder-data/boolder.db
+
+# hente de stengte sonene fra ONF på nytt, og måle sektorene mot dem
+python3 tools/soner.py soner.geojson
 
 # føre opp at sektorer har åpnet eller stengt
 python3 tools/logg.py --skriv

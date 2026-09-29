@@ -38,7 +38,8 @@ All data ligger i én blokk øverst i `<script>`, merket `/* === DATA === */`.
 | `HISTORIKK` | Endringsloggen, med norsk og engelsk tekst per oppføring |
 | `PTS` | Posisjonen til hver av de 19 139 blokkene, delta-kodet |
 | `BURN_RINGS` | Brannflaten, 76 polygoner |
-| `FORESTS` | De tre stengte statsskogene |
+| `SONER` | De stengte sonene fra ONFs kart, skrevet av `tools/soner.py` |
+| `FORESTS` | De tre statsskogene, avslått som standard |
 | `PLACES` | Stedsnavnene i kartlaget «Steder», avslått som standard |
 | `BOOLDER` | Sektornavn → Boolder-slug, brukt til lenka i infoboksen |
 | `SOURCES` | Kildelista nederst på siden |
@@ -140,6 +141,19 @@ og de er tegnet på tre kartvedlegg. Vedleggene er skannede rasterkart uten
 koordinater, men ONF fører de samme sonene som polygoner i et uMap, og dem kan
 `forbudssone.py` måle sektorene mot. Kommandoen står øverst i
 `tools/forbudssone.py`.
+
+Sonene er også tegnet i kartet, som laget «Stengt sone», slått på som standard.
+`tools/soner.py` henter dem inn i `SONER`, avrundet som resten av datablokka, og
+måler sektorene mot de avrundede sonene med én gang. Røyktesten gjør det samme i
+nettleseren: en sektor med brannkategori skal ligge helt innenfor, en åpen helt
+utenfor og en delvis åpen på begge sider. Endrer ONF sonene, er arbeidsgangen:
+
+```sh
+curl -o soner.geojson https://umap.openstreetmap.fr/fr/datalayer/1443097/2ef1acb6-984c-4987-b95f-d7e5e6ad6186/
+python3 tools/soner.py soner.geojson     # skriver SONER og sier fra om avvik
+```
+
+Sier skriptet fra om avvik, er det statusen som skal vurderes — av et menneske.
 
 Adgangsstatusen i Trois Pignons og Apremont bygger derfor på to ting: målingen
 mot ONFs soner, og ONFs egne lag over tilgjengelige og ikke tilgjengelige
@@ -326,7 +340,7 @@ varselet om utløpt ferdselsforbud dukker opp når datoen er passert.
 | Ferdselsforbud, Seine-et-Marne | Arrêtés 2026/CAB/SIDPC/1300 og 1301 av 06.08.2026 | Offentlig vedtak |
 | Stengte soner fra 01.09.2026 | Arrêté 2026/CAB/SIDPC/1386 av 28.08.2026, med tre kartvedlegg | Offentlig vedtak |
 | Ferdselsforbud, Essonne | Arrêtés 2026-DDT-SEAF av 07.07.2026 og 2026-PREF-DCSIPC-SIDPC-1244 av 27.07.2026 | Offentlig vedtak |
-| Bakgrunnskart | OpenStreetMap, CARTO, Esri | Se attribusjon i kartet |
+| Bakgrunnskart | OpenStreetMap, Esri | Se attribusjon i kartet |
 
 ## Lisens
 
