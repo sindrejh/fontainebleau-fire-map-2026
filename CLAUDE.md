@@ -48,8 +48,8 @@ ikke har funnet noe nytt. Finner du hjemmelen, er statusen ikke lenger uavklart.
 **`stengt` er en brannkategori, ikke en påstand om en statsskog.** Navnet ble
 valgt i juli, da hele massivet var stengt og kategorien falt sammen med «ligger
 i en av de tre stengte statsskogene». Etter gjenåpninga 22. august 2026 betyr
-den: uberørt av brannen, over en kilometer unna nærmeste brannflate, og ikke
-ført som åpen. Skriver du tekst som forutsetter det gamle innholdet — at
+den: utenfor den kartlagte brannflaten, over en kilometer unna den, og ikke
+ført som åpen — ikke «uberørt». Skriver du tekst som forutsetter det gamle innholdet — at
 sektoren ligger i en stengt statsskog — blir den feil for de fleste sektorene i
 de samme skogene, som nå er åpne. Det var nøyaktig den feilen `iSkog` sto med på
 hvert eneste sektorkort etter gjenåpninga.
@@ -77,6 +77,14 @@ fører den som åpen, ikke fordi den ligger utenfor sona; ligger den utenfor ute
 at noen fører den som åpen, er den `uavklart`. Hver brannkategori-sektor skal
 ligge helt innenfor sonene — det er det `CAT`-tekstene for `naer` og `stengt`
 sier. Mål på nytt når ONF endrer sonelaget, og se at det fortsatt holder.
+
+**Utenfor det Copernicus kartla, vet kartet ingenting.** EMSR894 har ett
+analyseområde. Utenfor det er avstanden til nærmeste brannflate bare avstanden
+til det som ble kartlagt, ikke til nærmeste brann. Sida sa en gang at sektorene
+der var «ikke berørt av brannen», og ved Apremont brant det i to egne branner
+ingen kartla. Skriv aldri at en sektor utenfor området er uberørt. Branner
+kilder nevner der, går i `META.smabranner` og vises på kortene — de legges ikke
+inn i brannflaten, for de har ingen kartlagt flate å telle blokker mot.
 
 **Ingen tall i prosaen.** All tekst bygges av `META` i `tekster()`. Hovedtallet
 sto en gang tre steder med tre ulike verdier samtidig. Skal du skrive et tall i

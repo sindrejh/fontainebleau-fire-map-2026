@@ -45,28 +45,30 @@ const SPRAAK = {
     tall: ['926', '921', '23 613', '22 692', '2 104', '19 139', '76 atskilte'],
     panel: '153 av 475', gammelt: '56,3', pct: '32,2 %',
     metode: 'Hva tallene bygger på', knapp: 'EN',
-    tom: 'Ingen sektorer passer søket.', logg: 'De stengte sonene er tegnet i kartet', sone: 'Stengt sone', skog: 'Statsskog',
+    tom: 'Ingen sektorer passer søket.', logg: 'Utenfor det Copernicus kartla, vet kartet ingenting', sone: 'Stengt sone', skog: 'Statsskog',
     alleKnapp: 'Åpne alle områder', alleLukk: 'Lukk alle områder',
     klSum: '1 877 av 5 937 blokker', klTally: 'Alle 90 sektorene fordelt på 19 områder.',
-    klRen: 'Ingen av 2 339 blokker brent',
+    klRen: 'Ingen av 2 339 blokker i brannflaten',
+    smaBrann: 'Det brant i dette området også', ikkeBerort: 'ikke berørt',
     ess: 'Ligger i Essonne.', nemours: 'Forêt communale de Nemours',
     uavklart: 'Uavklart', delvis: 'Delvis åpen', stengtTag: 'Stengt',
     full: 'Fullskjerm', fullAv: 'Avslutt fullskjerm', forklaring: 'Tegnforklaring',
-    forkBolk: 'Brannflate', forkStatus: 'Uberørt, men stengt',
+    forkBolk: 'Brannflate', forkStatus: 'Utenfor brannflaten, men stengt',
   },
   en: {
     h1: 'What the fire actually took.', nav: 'MAP',
     tall: ['926', '921', '23,613', '22,692', '2,104', '19,139', '76 separate'],
     panel: '153 of 475', gammelt: '56.3', pct: '32.2%',
     metode: 'What the figures rest on', knapp: 'NO',
-    tom: 'No sectors match that search.', logg: 'The closed zones are drawn on the map', sone: 'Closed zone', skog: 'State forest',
+    tom: 'No sectors match that search.', logg: 'Outside what Copernicus mapped, the map knows nothing', sone: 'Closed zone', skog: 'State forest',
     alleKnapp: 'Expand all areas', alleLukk: 'Collapse all areas',
     klSum: '1,877 of 5,937 boulders', klTally: 'All 90 sectors across 19 areas.',
-    klRen: 'None of 2,339 boulders burned',
+    klRen: 'None of 2,339 boulders inside the perimeter',
+    smaBrann: 'This area burned too', ikkeBerort: 'untouched',
     ess: 'Lies in the Essonne.', nemours: 'Forêt communale de Nemours',
     uavklart: 'Unresolved', delvis: 'Partly open', stengtTag: 'Closed',
     full: 'Full screen', fullAv: 'Exit full screen', forklaring: 'Legend',
-    forkBolk: 'Burn perimeter', forkStatus: 'Untouched, but closed',
+    forkBolk: 'Burn perimeter', forkStatus: 'Outside the perimeter, but closed',
   },
 };
 
@@ -135,13 +137,13 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
   for (const n of F.tall) await t(`«${n}» finnes`, () => kropp.includes(n));
 
   console.log('— endringsloggen —');
-  await t('trettien oppføringer', async () => (await page.locator('.tl li').count()) === 31 ? '31' : false);
+  await t('trettifire oppføringer', async () => (await page.locator('.tl li').count()) === 34 ? '34' : false);
   await t('nyeste står øverst', async () =>
     (await page.locator('.tl li').first().innerText()).includes(F.logg));
   await t('oppføringene lenker til kilder', async () =>
     (await page.locator('.tl .k').count()) >= 5);
   await t('datoene er maskinlesbare', async () =>
-    (await page.locator('.tl time[datetime]').count()) === 31);
+    (await page.locator('.tl time[datetime]').count()) === 34);
   await t('varselet er skjult før forbudsdatoen', async () =>
     !(await page.locator('#warn').isVisible()));
 
@@ -155,7 +157,7 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     (await page.locator('.clus .g').first().innerText()).startsWith('MONT AIGU'));
   await t('sammendraget viser blokktallet', async () =>
     nbsp(await page.locator('.clus', { hasText: 'TROIS PIGNONS' }).first().innerText()).includes(F.klSum));
-  await t('uberørt område sier at ingenting er brent', async () =>
+  await t('område uten blokker i brannflaten sier det', async () =>
     nbsp(await page.locator('.clus', { hasText: 'APREMONT' }).first().innerText()).includes(F.klRen));
   await t('klikk på overskrifta åpner området', async () => {
     const tp = page.locator('.clus', { hasText: 'TROIS PIGNONS' }).first();
@@ -219,6 +221,15 @@ for (const [lang, F] of Object.entries(SPRAAK)) {
     return !s.includes(F.nemours);
   });
 
+  /* Copernicus kartla bare ett område. Utenfor det kan sida si hvor langt det er
+     til nærmeste kartlagte brannflate, men ikke at det ikke brant — ved Apremont
+     brant det i egne branner Copernicus aldri så på. */
+  await t('Apremont-kort sier at det brant der, og ikke at sektoren er uberørt', async () => {
+    await page.fill('#q', 'Apremont Est'); await page.waitForTimeout(250);
+    await page.locator('.row').first().click(); await page.waitForTimeout(900);
+    const kort = await page.locator('.picked').innerText();
+    return kort.includes(F.smaBrann) && !kort.toLowerCase().includes(F.ikkeBerort);
+  });
   /* En delvis åpen sektor er åpen og stengt på én gang. Bærer den «stengt»-
      merkelappen, har sida skjult halvparten av det kilden faktisk sier.
      La Ségognole er delvis åpen fordi grensa for den stengte sona går tvers

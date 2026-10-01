@@ -68,6 +68,7 @@ Bare disse feltene er ferskvare:
 | `META.reopen_date` | Datoen massivet i all hovedsak åpnet igjen, vist i samme kort og i bunnteksten |
 | `META.ess_until` | Datoen Essonnes siste forbud gjaldt til, vist på de sektorene |
 | `META.ess_rest_until` | Datoen Essonnes siste restriksjonsvedtak gjaldt til — det som ikke stengte skogen |
+| `META.smabranner` | Branner Copernicus ikke kartla, per Boolder-område: datoer, areal og kilde |
 | `META.zone_until` | Datoen sonene som brant er stengt til, etter arrêté 1386 |
 | `SECTORS[].s` | Statusen på hver sektor — sett `open` ved gjenåpning |
 | | `delvis` når grensa for den stengte sona går tvers gjennom sektoren |
@@ -113,10 +114,12 @@ egen måling.
 
 Merk hva `stengt` *ikke* betyr lenger. Navnet ble valgt i juli, da hele massivet
 var stengt og kategorien falt sammen med «ligger i en av de tre stengte
-statsskogene». Etter gjenåpninga 22. august 2026 betyr den bare: uberørt av
-brannen, over en kilometer fra nærmeste brannflate, og ikke ført som åpen.
-Sektorene som bærer den nå, ligger alle i Apremont, og alle blokkene deres er
-målt innenfor ONFs stengte soner — ikke i en hel statsskog. `naer` er det samme,
+statsskogene». Etter gjenåpninga 22. august 2026 betyr den bare: utenfor den
+kartlagte brannflaten, over en kilometer fra den, og ikke ført som åpen. Den
+betyr ikke uberørt — tittelen var «Uberørt, men stengt» til det viste seg at
+sektorene som bærer den, alle ligger i Apremont, der det brant i egne branner
+Copernicus aldri kartla. Alle blokkene deres er målt innenfor ONFs stengte
+soner — ikke i en hel statsskog. `naer` er det samme,
 med under en kilometer til flata.
 
 Navnet er beholdt med vilje: `tools/statuslogg.json` er øyeblikksbildet
@@ -340,6 +343,7 @@ varselet om utløpt ferdselsforbud dukker opp når datoen er passert.
 | Ferdselsforbud, Seine-et-Marne | Arrêtés 2026/CAB/SIDPC/1300 og 1301 av 06.08.2026 | Offentlig vedtak |
 | Stengte soner fra 01.09.2026 | Arrêté 2026/CAB/SIDPC/1386 av 28.08.2026, med tre kartvedlegg | Offentlig vedtak |
 | Ferdselsforbud, Essonne | Arrêtés 2026-DDT-SEAF av 07.07.2026 og 2026-PREF-DCSIPC-SIDPC-1244 av 27.07.2026 | Offentlig vedtak |
+| Branner utenfor Copernicus-området | [Wikipedia](https://fr.wikipedia.org/wiki/Incendies_de_2026_en_for%C3%AAt_de_Fontainebleau), brannene ved Apremont 8. og 11. juli | CC BY-SA |
 | Bakgrunnskart | OpenStreetMap, Esri | Se attribusjon i kartet |
 
 ## Lisens
@@ -376,8 +380,12 @@ tallet, prikken i kartet og en eventuell etterregning stemmer overens.
 * En blokk utenfor flaten kan være svidd likevel, og en blokk innenfor kan stå
   uskadd. Flaten sier hvor det brant, ikke hva som skjedde med hver enkelt stein.
 * 50 av de 90 sektorene ligger utenfor området Copernicus gjennomgikk. Alle
-  ligger minst 2,22 km fra nærmeste kartlagte brannflate og er derfor ikke
-  berørt av denne brannen.
+  ligger minst 2,22 km fra nærmeste kartlagte brannflate — men det sier ikke at
+  det ikke brant der. EMSR894 har ett eneste analyseområde, og det slutter rett
+  sør for Apremont. I Gorges d'Apremont brant det i to egne branner 8. og
+  11. juli, før storbrannen, og ingen av dem er kartlagt. De ligger i
+  `META.smabranner` med dato og areal slik kilden oppgir dem, og vises på
+  sektorkortene i området, men ingen blokker der telles som brent.
 * ONF og pressen oppgir rundt 2 000 hektar, «omtrent 10 prosent av massivet».
   Copernicus kartlegger 926. En del av forskjellen er at de offisielle tallene
   måler arealet innenfor brannens ytre omkrets og ikke bare det som virkelig
